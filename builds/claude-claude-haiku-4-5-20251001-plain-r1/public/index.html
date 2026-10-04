@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteShare - Sign Up or Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="auth-box">
+      <h1>NoteShare</h1>
+      <p class="subtitle">Share your notes with anyone</p>
+
+      <div id="authForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password">
+        </div>
+
+        <button id="submitBtn" class="btn btn-primary" onclick="toggleMode()">Create Account</button>
+        <button id="toggleBtn" class="btn btn-secondary" onclick="toggleMode()">Already have an account? Login</button>
+      </div>
+
+      <div id="message" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    let isSignup = true;
+
+    function toggleMode() {
+      isSignup = !isSignup;
+      const submitBtn = document.getElementById('submitBtn');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const title = document.querySelector('h1').nextElementSibling;
+
+      if (isSignup) {
+        submitBtn.textContent = 'Create Account';
+        toggleBtn.textContent = 'Already have an account? Login';
+        submitBtn.onclick = () => signup();
+      } else {
+        submitBtn.textContent = 'Login';
+        toggleBtn.textContent = 'Need an account? Sign up';
+        submitBtn.onclick = () => login();
+      }
+    }
+
+    async function signup() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+
+      if (!email || !password) {
+        messageDiv.textContent = 'Please fill in all fields';
+        messageDiv.className = 'message error';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (response.status === 201) {
+          messageDiv.textContent = 'Account created! You can now login.';
+          messageDiv.className = 'message success';
+          document.getElementById('email').value = '';
+          document.getElementById('password').value = '';
+          setTimeout(() => {
+            isSignup = false;
+            toggleMode();
+          }, 1500);
+        } else if (response.status === 409) {
+          messageDiv.textContent = 'Email already exists';
+          messageDiv.className = 'message error';
+        } else {
+          messageDiv.textContent = 'Error creating account';
+          messageDiv.className = 'message error';
+        }
+      } catch (err) {
+        messageDiv.textContent = 'Network error';
+        messageDiv.className = 'message error';
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const messageDiv = document.getElementById('message');
+
+      if (!email || !password) {
+        messageDiv.textContent = 'Please fill in all fields';
+        messageDiv.className = 'message error';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (response.status === 200) {
+          const data = await response.json();
+          localStorage.setItem('token', data.token);
+          window.location.href = '/notes.html';
+        } else {
+          messageDiv.textContent = 'Invalid email or password';
+          messageDiv.className = 'message error';
+        }
+      } catch (err) {
+        messageDiv.textContent = 'Network error';
+        messageDiv.className = 'message error';
+      }
+    }
+
+    document.getElementById('submitBtn').onclick = () => signup();
+
+    document.getElementById('password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        if (isSignup) signup();
+        else login();
+      }
+    });
+  </script>
+</body>
+</html>

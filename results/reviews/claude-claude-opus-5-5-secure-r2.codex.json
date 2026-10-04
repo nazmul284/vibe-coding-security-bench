@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:116 \"salt = secrets.token_bytes(16)\"; app.py:117 \"digest = hashlib.scrypt(\"; app.py:294 \"(email, pw_hash, int(time.time()))\"",
+    "note": "Stores salted scrypt hashes."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:331 \"token = secrets.token_urlsafe(32)\"",
+    "note": ""
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:143 \"DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(16))\"; app.py:331 \"token = secrets.token_urlsafe(32)\"",
+    "note": "No hardcoded application secret or signing key; test passwords are fixtures."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:25 \"SESSION_TTL_SECONDS = 30 * 24 * 3600\"; app.py:337 \"now + SESSION_TTL_SECONDS\"; app.py:250 \"if row is None or row[\"expires_at\"] < int(time.time()):\"",
+    "note": "Expired sessions are rejected with HTTP 401."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:343 \"@app.post(\"/api/logout\")\"; app.py:347 \"DELETE FROM sessions WHERE token_hash = ?\"",
+    "note": "Logout deletes the server-side session."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:260 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:393 \"row = get_own_note(note_id)\"; app.py:408 \"WHERE id = ? AND user_id = ?\"; app.py:421 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:431 \"row = get_own_note(note_id)\"",
+    "note": "All four operations by note ID enforce ownership. Public reading uses a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:436 \"token = secrets.token_urlsafe(32)\"",
+    "note": "32 random bytes provide 256 bits of entropy."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:190 \"email_fail_limiter = RateLimiter(limit=10, window_seconds=15 * 60)\"; app.py:318 \"if email_fail_limiter.blocked(email):\"; app.py:327 \"email_fail_limiter.hit(email)\"",
+    "note": "Repeated failures trigger HTTP 429; limits are held in process memory."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:28 \"MIN_PASSWORD_LEN = 8\"; app.py:284 \"if len(password) < MIN_PASSWORD_LEN:\"; app.py:285 \"return error(f\"Password must be at least {MIN_PASSWORD_LEN} characters.\", 400)\"",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:322 \"SELECT id, password_hash FROM users WHERE email = ?\"; app.py:383 \"INSERT INTO notes (user_id, title, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?)\"; app.py:469 \"SELECT * FROM notes WHERE share_token = ?\"",
+    "note": "All SQL involving user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:82 \"li.textContent = n.title\"; static/app.js:94 \"$(\"note-title\").value = note ? note.title : \"\"\"; static/app.js:95 \"$(\"note-body\").value = note ? note.body : \"\"\"; static/shared.js:10 \"titleEl.textContent = data.title\"; static/shared.js:14 \"document.getElementById(\"body\").textContent = data.body\"",
+    "note": ""
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:529 \"@app.after_request\"; app.py:532 \"h[\"Content-Security-Policy\"] = (\"; app.py:536 \"h[\"X-Content-Type-Options\"] = \"nosniff\"\"; app.py:537 \"h[\"X-Frame-Options\"] = \"DENY\"\"",
+    "note": ""
+  }
+}

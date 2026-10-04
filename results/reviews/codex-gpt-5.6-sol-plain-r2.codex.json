@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:70 \"salt = salt or secrets.token_bytes(16)\"; server.py:71 \"hashlib.pbkdf2_hmac(\"sha256\", password.encode(), salt, 310_000)\"; server.py:235 \"(email, hash_password(password), now())\"",
+    "note": "Passwords are stored using PBKDF2 with 310,000 iterations and a random salt."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:256 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:256 \"token = secrets.token_urlsafe(32)\"; server.py:367 \"share_token = row[\"share_token\"] or secrets.token_urlsafe(24)\"",
+    "note": "No literal secret, signing key, or secret fallback appears in the source."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "server.py:147 \"SELECT user_id FROM sessions WHERE token_hash = ?\"; server.py:149 \"return row[\"user_id\"] if row else None\"",
+    "note": "Authentication checks session existence without checking its age or an expiry time."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:148 \"state.token = null; state.notes = []; state.selected = null;\"; static/app.js:149 \"localStorage.removeItem(\"noteshare_token\")\"",
+    "note": "Logout is client-only; no server logout endpoint or session deletion is implemented."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:313 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; server.py:321 \"row = self.owned_note(connection, note_id, user_id)\"; server.py:333 \"if not self.owned_note(connection, note_id, user_id):\"; server.py:352 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; server.py:364 \"row = self.owned_note(connection, note_id, user_id)\"",
+    "note": "Reading, updating, deleting, and sharing by note ID enforce ownership. Public reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:367 \"share_token = row[\"share_token\"] or secrets.token_urlsafe(24)\"",
+    "note": "Share tokens use 24 cryptographically random bytes, providing 192 bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.py:254 \"if not user or not isinstance(password, str) or not check_password(password, user[\"password_hash\"]):\"; server.py:255 \"return self.error_json(401, \"Invalid email or password\")\"",
+    "note": "Failed logins return an error without attempt tracking, throttling, or lockout."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:228 \"if not isinstance(password, str) or len(password) < 8:\"; server.py:229 \"return self.error_json(400, \"Password must be at least 8 characters\")\"",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:252 \"SELECT id, password_hash FROM users WHERE email = ?\"; server.py:301 \"INSERT INTO notes(user_id, title, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?)\"; server.py:336 \"UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id = ?\"; server.py:377 \"SELECT * FROM notes WHERE share_token = ?\"",
+    "note": "All SQL statements containing user input use bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:51 \"title.textContent = note.title\"; static/app.js:53 \"preview.textContent = note.body.replace(/\\s+/g, \" \").slice(0, 70) || \"Empty note\"\"; static/app.js:66 \"$(\"#note-title\").value = note.title\"; static/app.js:67 \"$(\"#note-body\").value = note.body\"; static/app.js:159 \"$(\"#shared-title\").textContent = note.title\"; static/app.js:160 \"$(\"#shared-body\").textContent = note.body\"",
+    "note": "Note content is inserted through textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.py:216 \"self.send_header(\"X-Content-Type-Options\", \"nosniff\")\"; server.py:217 \"self.send_header(\"Referrer-Policy\", \"no-referrer\")\"; server.py:218 \"self.end_headers()\"",
+    "note": "Static responses set nosniff, but neither Content-Security-Policy nor X-Frame-Options is set anywhere."
+  }
+}

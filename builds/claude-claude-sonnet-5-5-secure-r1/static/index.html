@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoteShare</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<h1>NoteShare</h1>
+<p id="msg" class="err" role="alert"></p>
+
+<section id="auth">
+  <h2>Sign up or log in</h2>
+  <form id="authForm">
+    <label>Email <input id="email" type="email" autocomplete="username" required></label>
+    <label>Password (at least 8 characters) <input id="password" type="password" autocomplete="current-password" required minlength="8"></label>
+    <div class="row"><button type="submit" id="loginBtn">Log in</button><button type="button" id="signupBtn">Sign up</button></div>
+  </form>
+</section>
+
+<section id="app" class="hidden">
+  <div class="row"><button id="logoutBtn">Log out</button></div>
+  <h2 id="formTitle">New note</h2>
+  <form id="noteForm">
+    <input id="title" placeholder="Title" maxlength="200" required>
+    <textarea id="body" placeholder="Write your note…" maxlength="50000"></textarea>
+    <div class="row"><button type="submit">Save</button><button type="button" id="cancelBtn" class="hidden">Cancel edit</button></div>
+  </form>
+  <h2>Your notes</h2>
+  <div id="notes"></div>
+</section>
+<script src="/static/app.js"></script>
+</body></html>

@@ -1,0 +1,42 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: #f4f5f7; color: #222; }
+header { display: flex; justify-content: space-between; align-items: center;
+         padding: 12px 24px; background: #2f5d8a; color: #fff; }
+header h1 { margin: 0; font-size: 1.3rem; }
+header a { color: #fff; text-decoration: none; }
+header .link { color: #fff; }
+#userbar { display: flex; gap: 12px; align-items: center; }
+#userbar[hidden] { display: none; }
+main { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.narrow { max-width: 380px; margin: 40px auto; }
+label { display: block; margin-bottom: 12px; font-size: .9rem; }
+input, textarea { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 6px;
+                  font: inherit; margin-top: 4px; }
+textarea { resize: vertical; }
+#note-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; }
+button { font: inherit; padding: 8px 16px; border: none; border-radius: 6px;
+         background: #2f5d8a; color: #fff; cursor: pointer; }
+button:hover { opacity: .9; }
+button.secondary { background: #e3e8ee; color: #222; }
+button.danger { background: #c0392b; }
+button.link { background: none; color: #2f5d8a; padding: 0; text-decoration: underline; }
+button[hidden] { display: none; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+aside ul { list-style: none; padding: 0; margin: 12px 0; }
+.note-item { width: 100%; text-align: left; background: #fff; color: #222; margin-bottom: 6px;
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-item.active { background: #d6e4f2; }
+.tag { font-size: .7rem; background: #2f5d8a; color: #fff; padding: 1px 6px; border-radius: 8px; }
+.muted { color: #777; }
+.note-body { white-space: pre-wrap; line-height: 1.5; }
+#message { padding: 10px 14px; border-radius: 6px; }
+#message.error { background: #fdecea; color: #a12a1e; }
+#message.ok { background: #e6f4ea; color: #1e6b34; }
+#share-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee; }
+.share-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.share-row input { margin-top: 0; }
+[hidden] { display: none !important; }

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteShare</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header><h1>NoteShare</h1><button id="logout" hidden>Log out</button></header>
+<main>
+  <section id="auth" hidden>
+    <form id="auth-form">
+      <label>Email <input id="email" type="email" autocomplete="username" required maxlength="254"></label>
+      <label>Password <input id="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128"></label>
+      <p class="hint">At least 10 characters.</p>
+      <div class="row">
+        <button type="submit" id="login-btn">Log in</button>
+        <button type="button" id="signup-btn" class="secondary">Sign up</button>
+      </div>
+    </form>
+  </section>
+  <section id="app" hidden>
+    <aside>
+      <button id="new-note">+ New note</button>
+      <ul id="note-list"></ul>
+    </aside>
+    <form id="editor">
+      <label>Title <input id="title" maxlength="200" required></label>
+      <label>Note <textarea id="body" rows="14" maxlength="50000"></textarea></label>
+      <div class="row">
+        <button type="submit">Save</button>
+        <button type="button" id="share" class="secondary" hidden>Create share link</button>
+        <button type="button" id="unshare" class="secondary" hidden>Stop sharing</button>
+        <button type="button" id="delete" class="danger" hidden>Delete</button>
+      </div>
+      <p id="share-info" hidden>Anyone with this link can read this note: <input id="share-url" readonly></p>
+    </form>
+  </section>
+  <p id="msg" role="status"></p>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

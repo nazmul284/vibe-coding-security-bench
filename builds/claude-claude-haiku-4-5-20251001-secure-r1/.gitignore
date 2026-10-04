@@ -1,0 +1,4 @@
+node_modules/
+noteshare.db
+.DS_Store
+*.log

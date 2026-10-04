@@ -1,0 +1,12 @@
+{
+  "name": "claude-claude-sonnet-5-5-secure-r1",
+  "agent": "claude",
+  "model": "claude-sonnet-5-5",
+  "prompt": "secure",
+  "rep": 1,
+  "rc": 0,
+  "wall_s": 103.2,
+  "cost_usd": 0.2152274,
+  "turns": 5,
+  "is_error": false
+}

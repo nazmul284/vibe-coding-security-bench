@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:246 generate_password_hash(password, method=\"scrypt\")",
+    "note": "Werkzeug scrypt adds a random salt; checked with check_password_hash at app.py:265."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:268 token = secrets.token_urlsafe(32)",
+    "note": "Server stores only the SHA-256 of the token (app.py:273)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:25-26 app = Flask(...); app.config.update(MAX_CONTENT_LENGTH=256 * 1024, JSON_SORT_KEYS=False)",
+    "note": "No SECRET_KEY or signing key anywhere; tokens are random and kept server-side, so no signing key is needed."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:142 \"SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at > ?\"",
+    "note": "expires_at = current + TOKEN_TTL_SECONDS (30 days, app.py:21, app.py:273)."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:44-48 function logout() { state.token = null; ... sessionStorage.removeItem(\"noteshare_token\");",
+    "note": "app.py has no logout route. The only session DELETE removes tokens that have already expired (app.py:270), so logout only happens in the browser."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:306 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:324 \"UPDATE notes ... WHERE id = ? AND user_id = ?\"; app.py:336 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:346 if owned_note(note_id) is None",
+    "note": "Read (get_note uses owned_note), update, delete and share are all limited to the owner."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:348 token = secrets.token_urlsafe(32)",
+    "note": "32 random bytes = 256 bits from the secrets module."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:258-260 key = f\"login:{request.remote_addr}:{str(email).lower()[:254]}\"; if not limiter.allowed(key): return error(\"Too many attempts. Try again later\", 429)",
+    "note": "12 attempts per 300 s for each IP+email (app.py:98), held in memory. It counts every attempt, not just failed ones, and failures also sleep 0.15 s (app.py:266)."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:163 if len(password) < 10 or len(password) > 1024:",
+    "note": "Minimum is 10 characters, which is stricter than 8."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:264 db().execute(\"SELECT id, password_hash FROM users WHERE email = ?\", (email,))",
+    "note": "Every query with user input uses ? placeholders (app.py:142, 245, 283, 296, 306, 324, 336, 350, 361). There is no string-formatted SQL."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:69 title.textContent = note.title; static/app.js:71 preview.textContent = note.body; static/app.js:189-190 $(\"shared-title\").textContent = note.title; $(\"shared-body\").textContent = note.body;",
+    "note": "The only innerHTML (app.js:193) is a fixed string with no user data."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:198-202 response.headers[\"X-Content-Type-Options\"] = \"nosniff\"; response.headers[\"X-Frame-Options\"] = \"DENY\"; ... response.headers[\"Content-Security-Policy\"] = (",
+    "note": "Set on every response by the after_request hook."
+  }
+}

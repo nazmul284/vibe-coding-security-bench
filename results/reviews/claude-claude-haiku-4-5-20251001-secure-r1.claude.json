@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:134 const hashedPassword = await bcrypt.hash(password, 10);",
+    "note": "bcryptjs with cost 10, which salts automatically"
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "server.js:12 const jwtSecret = 'noteshare-secret-key-change-in-production'; / server.js:171 jwt.sign({ id: user.id, email: user.email }, jwtSecret, ...)",
+    "note": "Tokens are HMAC-signed JWTs, but the key is a hardcoded literal. It is neither random nor read from configuration."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:12 const jwtSecret = 'noteshare-secret-key-change-in-production';",
+    "note": ""
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:172 expiresIn: '30d'",
+    "note": "jwt.verify at server.js:76 rejects expired tokens"
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/index.html:540-542 function logout() { currentToken = null; localStorage.removeItem('token'); ...",
+    "note": "Logout only runs in the browser. The server has no logout endpoint and no token denylist or session table."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:219, 243, 267, 286 'SELECT * FROM notes WHERE id = ? AND user_id = ?' [req.params.id, req.user.id]",
+    "note": "The GET, PUT, DELETE and share routes each check ownership before acting"
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.js:67 return crypto.randomBytes(32).toString('hex');",
+    "note": "256 bits from a cryptographic RNG"
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:151 app.post('/api/login', async (req, res) => {",
+    "note": "No rate-limiting middleware, failed-attempt counter or lockout anywhere in the code"
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:130 if (password.length < 6) {",
+    "note": "The minimum is 6 characters, so 6- and 7-character passwords are accepted"
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:159 dbGet('SELECT * FROM users WHERE email = ?', [email]); server.js:252 'UPDATE notes SET title = ?, body = ?, ... WHERE id = ?'",
+    "note": "Every query that takes user input uses ? placeholders"
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/index.html:662 <h3>${escapeHtml(note.title)}</h3>; index.html:685 detailTitle').textContent = note.title; index.html:848 sharedTitle').textContent = note.title",
+    "note": "The list view escapes text with a textContent-based escapeHtml (index.html:830-833). The detail and shared views use textContent. note.id inserted at index.html:661 is a server-generated integer."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:14-15 app.use(bodyParser.json()); app.use(express.static('public'));",
+    "note": "No helmet and no res.setHeader for CSP, X-Content-Type-Options or X-Frame-Options"
+  }
+}

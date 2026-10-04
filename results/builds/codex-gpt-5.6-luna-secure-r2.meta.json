@@ -1,0 +1,16 @@
+{
+  "name": "codex-gpt-5.6-luna-secure-r2",
+  "agent": "codex",
+  "model": "gpt-5.6-luna",
+  "prompt": "secure",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 224.5,
+  "usage": {
+    "input_tokens": 252051,
+    "cached_input_tokens": 219392,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 10809,
+    "reasoning_output_tokens": 1377
+  }
+}

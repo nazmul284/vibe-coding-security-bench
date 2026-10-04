@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:11 \"from argon2 import PasswordHasher\"; app.py:23 \"ph = PasswordHasher()\"; app.py:135 \"hashed = ph.hash(password)\"; app.py:138 \"INSERT INTO users(email,password) VALUES(?,?)",
+    "note": "Argon2 generates a salt automatically; the resulting hash is stored."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:150 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:24 \"DUMMY = ph.hash(secrets.token_urlsafe(32))\"; app.py:150 \"token = secrets.token_urlsafe(32)\"",
+    "note": "No hardcoded application secret, signing key, or fallback secret appears. The literal test password is a test fixture."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:153 \"int(time.time()) + 86400\"; app.py:92 \"SELECT user_id FROM sessions WHERE token=? AND expires>?\"",
+    "note": "Sessions expire after 24 hours; authentication checks expiration."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:156 \"@app.post('/api/logout')\"; app.py:160 \"DELETE FROM sessions WHERE token=?\"",
+    "note": "Logout deletes the server-side session."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:191 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:197 \"DELETE FROM notes WHERE id=? AND user_id=?\"; app.py:202 \"UPDATE notes SET title=?,body=?,updated_at=? WHERE id=? AND user_id=?\"; app.py:210 \"UPDATE notes SET share_hash=? WHERE id=? AND user_id=?\"",
+    "note": "All four operations by note ID require the authenticated owner. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:208 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Share tokens contain 256 bits of cryptographic randomness."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:99 \"def limited(key, maximum, seconds=900):\"; app.py:124 \"if limited('ip:' + (request.remote_addr or 'unknown'), 40):\"; app.py:130 \"if limited('account:' + digest(email), 15):\"; app.py:131 \"return error('Too many attempts. Try again in 15 minutes.', 429)\"",
+    "note": "Login attempts, including failures, are limited per IP and account."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:133 \"if len(password) < 12:\"; app.py:134 \"return error('Use a password with at least 12 characters.', 400)\"",
+    "note": "Signup requires at least 12 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:138 \"db.execute('INSERT INTO users(email,password) VALUES(?,?)', (email, hashed))\"; app.py:191 \"db.execute('SELECT * FROM notes WHERE id=? AND user_id=?', (note_id, g.user_id))\"; app.py:220 \"db.execute('SELECT title,body FROM notes WHERE share_hash=?', (digest(token),))\"",
+    "note": "All SQL incorporating user input uses bound parameters; schema statements are static."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:27 \"title.textContent = note.title\"; static/app.js:28 \"preview.textContent = note.body.slice(0, 80)\"; static/app.js:16 \"$('body').value = note?.body || ''\"; static/app.js:58 \"$('shared-title').textContent = note.title; $('shared-body').textContent = note.body\"",
+    "note": "Note content uses textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:64 \"@app.after_request\"; app.py:68 \"'Content-Security-Policy': \\\"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'\\\"\"; app.py:69 \"'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY'\"",
+    "note": "The response hook sets CSP and both required alternative headers."
+  }
+}

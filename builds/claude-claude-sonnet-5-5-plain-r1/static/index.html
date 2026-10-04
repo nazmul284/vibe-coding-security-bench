@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoteShare</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:720px;margin:0 auto;padding:16px;color:#222;background:#f6f7f9}
+  h1{margin:8px 0}
+  .card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;margin:12px 0}
+  input,textarea{width:100%;box-sizing:border-box;padding:8px;margin:4px 0 10px;border:1px solid #bbb;border-radius:6px;font:inherit}
+  textarea{min-height:160px}
+  button{padding:8px 14px;border:0;border-radius:6px;background:#2563eb;color:#fff;font:inherit;cursor:pointer;margin-right:6px}
+  button.sec{background:#e5e7eb;color:#222} button.danger{background:#dc2626}
+  .err{color:#b91c1c;min-height:1.2em} .muted{color:#666;font-size:.9em}
+  .body{white-space:pre-wrap;word-wrap:break-word}
+  .top{display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<div class="top"><h1>NoteShare</h1><div id="nav"></div></div>
+<div id="app"></div>
+<script>
+const app = document.getElementById('app'), nav = document.getElementById('nav');
+let token = localStorage.getItem('token');
+
+function el(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e[k] = v;
+  }
+  for (const c of kids) e.append(c);
+  return e;
+}
+
+async function api(method, path, data) {
+  const headers = {'Content-Type': 'application/json'};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const r = await fetch(path, {method, headers, body: data ? JSON.stringify(data) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && token && !path.startsWith('/api/login')) { logout(true); throw new Error('Please log in again'); }
+  if (!r.ok) throw new Error(j.error || 'Something went wrong');
+  return j;
+}
+
+function logout(silent) {
+  if (!silent && token) api('POST', '/api/logout').catch(() => {});
+  token = null; localStorage.removeItem('token'); render();
+}
+
+function authView() {
+  const msg = el('div', {className: 'err'});
+  const email = el('input', {type: 'email', autocomplete: 'email'});
+  const pw = el('input', {type: 'password', autocomplete: 'current-password'});
+  async function go(kind) {
+    msg.textContent = '';
+    try {
+      const creds = {email: email.value, password: pw.value};
+      if (kind === 'signup') await api('POST', '/api/signup', creds);
+      const j = await api('POST', '/api/login', creds);
+      token = j.token; localStorage.setItem('token', token); render();
+    } catch (e) { msg.textContent = e.message; }
+  }
+  const form = el('form', {onsubmit: ev => { ev.preventDefault(); go('login'); }},
+    el('label', {}, 'Email', email), el('label', {}, 'Password (8+ characters)', pw), msg,
+    el('button', {type: 'submit'}, 'Log in'),
+    el('button', {type: 'button', className: 'sec', onclick: () => go('signup')}, 'Sign up'));
+  app.replaceChildren(el('div', {className: 'card'}, form));
+}
+
+async function notesView() {
+  nav.replaceChildren(el('button', {className: 'sec', onclick: () => logout()}, 'Log out'));
+  const msg = el('div', {className: 'err'});
+  let notes;
+  try { notes = await api('GET', '/api/notes'); } catch (e) { return; }
+  const list = el('div');
+  for (const n of notes) list.append(noteCard(n, msg));
+  app.replaceChildren(
+    el('button', {onclick: () => editView(null)}, 'New note'), msg,
+    notes.length ? list : el('p', {className: 'muted'}, 'No notes yet.'));
+}
+
+function noteCard(n, msg) {
+  const card = el('div', {className: 'card'},
+    el('h3', {}, n.title), el('div', {className: 'body'}, n.body));
+  const actions = el('div', {style: 'margin-top:10px'},
+    el('button', {className: 'sec', onclick: () => editView(n)}, 'Edit'),
+    el('button', {className: 'sec', onclick: async () => {
+      try {
+        const j = await api('POST', `/api/notes/${n.id}/share`);
+        showLink(card, n, j.share_token);
+      } catch (e) { msg.textContent = e.message; }
+    }}, n.share_token ? 'Show share link' : 'Share'),
+    el('button', {className: 'danger', onclick: async () => {
+      if (!confirm('Delete this note?')) return;
+      try { await api('DELETE', `/api/notes/${n.id}`); notesView(); } catch (e) { msg.textContent = e.message; }
+    }}, 'Delete'));
+  card.append(actions);
+  if (n.share_token) showLink(card, n, n.share_token);
+  return card;
+}
+
+function showLink(card, n, t) {
+  card.querySelector('.link')?.remove();
+  const url = location.origin + '/s/' + t;
+  card.append(el('div', {className: 'link muted', style: 'margin-top:8px'},
+    'Share link: ', el('input', {readOnly: true, value: url, onfocus: e => e.target.select()}),
+    el('button', {className: 'sec', onclick: async () => {
+      try { await api('DELETE', `/api/notes/${n.id}/share`); n.share_token = null; notesView(); } catch (e) {}
+    }}, 'Stop sharing')));
+}
+
+function editView(n) {
+  const msg = el('div', {className: 'err'});
+  const title = el('input', {value: n ? n.title : '', maxLength: 200});
+  const body = el('textarea', {value: n ? n.body : ''});
+  const form = el('form', {onsubmit: async ev => {
+    ev.preventDefault();
+    try {
+      const d = {title: title.value, body: body.value};
+      if (n) await api('PUT', `/api/notes/${n.id}`, d); else await api('POST', '/api/notes', d);
+      notesView();
+    } catch (e) { msg.textContent = e.message; }
+  }}, el('label', {}, 'Title', title), el('label', {}, 'Body', body), msg,
+    el('button', {type: 'submit'}, 'Save'),
+    el('button', {type: 'button', className: 'sec', onclick: notesView}, 'Cancel'));
+  app.replaceChildren(el('div', {className: 'card'}, form));
+}
+
+async function sharedView(t) {
+  try {
+    const n = await fetch('/api/shared/' + encodeURIComponent(t)).then(r => r.ok ? r.json() : Promise.reject());
+    document.title = n.title + ' – NoteShare';
+    app.replaceChildren(el('div', {className: 'card'}, el('h2', {}, n.title), el('div', {className: 'body'}, n.body)));
+  } catch (e) {
+    app.replaceChildren(el('div', {className: 'card'}, 'This shared note was not found or is no longer shared.'));
+  }
+}
+
+function render() {
+  const m = location.pathname.match(/^\/s\/([^/]+)$/);
+  if (m) return sharedView(m[1]);
+  if (token) notesView(); else { nav.replaceChildren(); authView(); }
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:97-98 salt = secrets.token_bytes(16); dk = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)",
+    "note": "scrypt with a random 16-byte salt for each password"
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:414 token = secrets.token_urlsafe(32)",
+    "note": "Opaque random token; only its SHA-256 hash is stored (server.py:419)"
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:112 _DUMMY_HASH = hash_password(secrets.token_hex(16))",
+    "note": "No signing keys are used, since sessions are random tokens. The only secret-like value is generated at random at startup."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.py:238 if row is None or row[\"expires_at\"] < time.time(): raise ApiError(401, ...)",
+    "note": "Lifetime is 30 days (server.py:23 SESSION_LIFETIME = 30 * 24 * 3600), set at server.py:419"
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "server.py:428 conn.execute(\"DELETE FROM sessions WHERE token_hash = ?\", (sha256(token),))",
+    "note": "POST /api/logout deletes the session row on the server"
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:352 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; server.py:454 \"UPDATE ... WHERE id = ? AND user_id = ?\"; server.py:463 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; server.py:468 row = self.own_note(user_id, note_id)",
+    "note": "Read (server.py:324), update, delete, share and unshare all go through own_note and filter by user_id"
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:471 token = secrets.token_urlsafe(24)",
+    "note": "24 random bytes = 192 bits from the secrets module"
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "server.py:405-406 if too_many_failures(*keys): raise ApiError(429, \"Too many failed login attempts...\")",
+    "note": "Allows 10 failures in 15 minutes per IP and per email (server.py:32-33). Counts are kept in memory only, so they reset when the server restarts."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:389 if len(password) < MIN_PASSWORD_LEN: raise ApiError(400, ...)",
+    "note": "MIN_PASSWORD_LEN = 8 (server.py:27)"
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:408 conn.execute(\"SELECT id, password_hash FROM users WHERE email = ?\", (email,))",
+    "note": "Every query that takes user input uses ? placeholders (server.py:236, 394, 418, 443, 454, 463, 474, 490). No string formatting is used to build SQL."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:59 li.textContent = (n.share_token ? \"\ud83d\udd17 \" : \"\") + n.title; static/shared.js:14-15 titleEl.textContent = res.data.title; bodyEl.textContent = res.data.body",
+    "note": "The editor uses .value (app.js:69-70). There is no innerHTML or document.write anywhere in static/."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "server.py:165-168 \"X-Content-Type-Options\": \"nosniff\", \"X-Frame-Options\": \"DENY\", ... \"Content-Security-Policy\": \"default-src 'self'; ...\"",
+    "note": "Sent on both JSON and file responses (server.py:189-190, 205-206)"
+  }
+}

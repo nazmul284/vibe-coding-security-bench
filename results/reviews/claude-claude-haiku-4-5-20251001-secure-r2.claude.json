@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:103 const hashedPassword = bcrypt.hashSync(password, 10);",
+    "note": "bcryptjs with cost 10. bcrypt adds its own salt."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.js:117 jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' }); server.js:11 const JWT_SECRET = process.env.JWT_SECRET || ...",
+    "note": "Tokens are JWTs signed with a key read from the JWT_SECRET environment variable. If that variable is unset, the code uses a hardcoded literal instead (see no_hardcoded_secret)."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:11 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';",
+    "note": "Hardcoded fallback signing key. start.sh does not set JWT_SECRET, so this key is used by default and anyone who knows it can forge tokens."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:142 jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' })",
+    "note": "30-day expiry, checked by jwt.verify at server.js:79."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/index.html:835-838 function logout() { localStorage.removeItem('token'); ...",
+    "note": "Logout only clears the token in the browser. There is no logout endpoint, session table or denylist on the server, so a token stays valid until it expires."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:193 'SELECT ... FROM notes WHERE id = ? AND user_id = ?'; server.js:219 'UPDATE notes ... WHERE id = ? AND user_id = ?'; server.js:242 'DELETE FROM notes WHERE id = ? AND user_id = ?'; server.js:263 'SELECT id FROM notes WHERE id = ? AND user_id = ?'",
+    "note": "Read, update, delete and share all check user_id."
+  },
+  "share_token_strong": {
+    "value": false,
+    "evidence": "server.js:288 const shareToken = uuidv4();",
+    "note": "uuid v4 uses a cryptographic RNG but has only 122 random bits, which is below the 128-bit threshold."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:123 app.post('/api/login', (req, res) => {",
+    "note": "No rate limiting, lockout or failed-attempt counter exists anywhere in the code."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:95 if (password.length < 6) {",
+    "note": "The minimum is 6 characters, not 8."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:107 'INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)'; server.js:311 WHERE share_links.share_token = ?",
+    "note": "Every query that takes user input uses ? placeholders with bound parameters."
+  },
+  "xss_safe_render": {
+    "value": false,
+    "evidence": "public/index.html:721 <input type=\"text\" id=\"noteTitle\" value=\"${escapeHtml(title)}\" ...>",
+    "note": "escapeHtml (index.html:869-873) works by reading div.innerHTML, which escapes &, < and > but not double quotes. A title containing \" can break out of the value attribute and inject event-handler attributes when the note is opened for editing. Other places use escapeHtml or textContent, and error messages go through innerHTML (index.html:619)."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:13-14 app.use(express.json()); app.use(express.static(...));",
+    "note": "No helmet and no res.setHeader for Content-Security-Policy, X-Content-Type-Options or X-Frame-Options."
+  }
+}

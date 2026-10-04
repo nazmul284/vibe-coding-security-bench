@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:241 generate_password_hash(password)",
+    "note": "Werkzeug's generate_password_hash, called with no method argument, uses salted scrypt by default (Werkzeug >=3, which Flask>=3.0 in requirements.txt:1 requires). Login checks it with check_password_hash at app.py:264."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:267 token = secrets.token_urlsafe(32)",
+    "note": "256-bit random token. Only its SHA-256 hash is stored (app.py:90)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:220 DUMMY_HASH = generate_password_hash(\"dummy-password-for-timing\")",
+    "note": "The only literal is a dummy password used to equalise login timing. It is not a signing key or secret. There is no SECRET_KEY or other signing key, and no literal fallback."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:155 if row[\"expires_at\"] < time.time(): ... return None",
+    "note": "TOKEN_TTL = 30 days (app.py:20), set as now + TOKEN_TTL at app.py:272."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:282 db().execute(\"DELETE FROM sessions WHERE token_hash = ?\", (hash_token(token),))",
+    "note": "POST /api/logout deletes the session on the server."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:290 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:344 \"UPDATE ... WHERE id = ? AND user_id = ?\"; app.py:356 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:369 \"UPDATE notes SET share_hash = ? WHERE id = ? AND user_id = ?\"",
+    "note": "Read, update, delete, share and unshare (app.py:382) are all limited to the owner by user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:367 token = secrets.token_urlsafe(32)",
+    "note": "256 bits from a cryptographic RNG."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:259 limiter.allow((\"login-ip\", client_ip()), 30, 900) or not limiter.allow((\"login-email\", email), 10, 900)",
+    "note": "Limits attempts per IP and per email over 15 minutes, held in memory. It counts every attempt, not only failed ones."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:236 if not (MIN_PASSWORD <= len(password) <= MAX_PASSWORD): return error(400, ...)",
+    "note": "MIN_PASSWORD = 8 (app.py:24)."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:263 \"SELECT id, password_hash FROM users WHERE email = ?\", (email,)",
+    "note": "Every query that takes user input uses ? placeholders. No string formatting is used in SQL."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:71 h.textContent = n.title; static/app.js:72 p.textContent = n.body; static/shared.js:6-7 .textContent = n.title / n.body",
+    "note": "No innerHTML, insertAdjacentHTML or document.write anywhere in static/."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:195 resp.headers[\"Content-Security-Policy\"] = ...; app.py:200 \"X-Content-Type-Options\" = \"nosniff\"; app.py:201 \"X-Frame-Options\" = \"DENY\"",
+    "note": "Set on every response through @app.after_request."
+  }
+}

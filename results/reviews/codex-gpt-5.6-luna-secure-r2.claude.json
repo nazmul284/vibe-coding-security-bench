@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:47-49 salt = secrets.token_bytes(16) ... hashlib.scrypt(password.encode(), salt=salt, n=2**13, r=8, p=1)",
+    "note": "Salted scrypt. N=8192 is on the low side but still a slow KDF."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:243 self.session_secret = secrets.token_bytes(32); app.py:128 hmac.new(self.server.session_secret, part.encode(), hashlib.sha256)",
+    "note": "The token is the user id signed with HMAC-SHA256, using a random key made at server start."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:243 self.session_secret = secrets.token_bytes(32)",
+    "note": "There is no literal key and no literal fallback. The secret is random on each run."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "app.py:127-129 part = str(uid); sig = b64(hmac.new(...)); return part + \".\" + sig",
+    "note": "The token holds no timestamp, and the cookie at app.py:221 has no Max-Age/Expires. A token stays valid until the server restarts and makes a new secret."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "app.py:236 $('#logout').onclick=()=>{document.cookie='noteshare_session=; Max-Age=0; Path=/';showAuth()}",
+    "note": "Logout happens only in the browser. There is no logout endpoint and no session store. The cookie is HttpOnly, so this JS can't even clear it."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:157 SELECT * FROM notes WHERE id=? AND user_id=?; app.py:186 owned = c.execute(\"SELECT id FROM notes WHERE id=? AND user_id=?\"...); app.py:194 DELETE FROM notes WHERE id=? AND user_id=?; app.py:200 UPDATE notes ... WHERE id=? AND user_id=?",
+    "note": "Read is checked at line 157. Update, delete and share all pass the ownership check at line 186 first."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:189 raw = b64(secrets.token_bytes(32))",
+    "note": "256 bits from a CSPRNG. Only the SHA-256 hash is stored."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:166 if self.limited(): return self.send_json(429, ...); app.py:108 return len(values) > 120",
+    "note": "This is a general limit of 120 POST/PUT/DELETE requests per minute per IP, and it covers /api/login. It is loose, and there is no lockout per account."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:208 ... len(password) < 10 ... return self.send_json(400, ...)",
+    "note": "Signup requires at least 10 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:218 c.execute(\"SELECT * FROM users WHERE email=?\", (email.strip().lower(),))",
+    "note": "Every query with user input uses ? placeholders (lines 124, 147, 153, 157, 181, 186, 190, 194, 200, 210, 218)."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "app.py:231 <h3>${esc(n.title)}</h3><p>${esc(n.body).replace(/\\n/g,'<br>')}</p>; app.py:232 const esc=s=>s.replace(/[&<>\"']/g, ...)",
+    "note": "The page uses innerHTML, but title and body are HTML-escaped first. Ids are integers."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:87-90 X-Content-Type-Options: nosniff; X-Frame-Options: DENY; Content-Security-Policy: default-src 'self'; ...",
+    "note": "Set on JSON, HTML and 204 responses. The CSP allows 'unsafe-inline' scripts."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "claude-claude-opus-5-5-plain-r2",
+  "agent": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "plain",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 274.1,
+  "cost_usd": 0.873283,
+  "turns": 13,
+  "is_error": false
+}

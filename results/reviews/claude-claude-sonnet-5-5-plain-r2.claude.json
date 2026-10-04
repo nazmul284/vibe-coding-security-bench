@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:195 generate_password_hash(pw)",
+    "note": "Uses Werkzeug's default method. Flask>=3.0 (requirements.txt:1) brings Werkzeug 3.x, where the default is salted scrypt."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:229 token = secrets.token_urlsafe(32)",
+    "note": "Tokens come from the secrets module. Only a SHA-256 hash of each token is stored (app.py:233-234)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:24 DUMMY_HASH = generate_password_hash(\"dummy-password\")",
+    "note": "No signing key or app secret appears anywhere. The only literal is a dummy password used to equalize login timing, not a secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:114 \"SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?\"",
+    "note": "expires_at is set to time.time() + TOKEN_LIFETIME, which is 30 days (app.py:14, app.py:234)."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:244 db().execute(\"DELETE FROM sessions WHERE token_hash=?\", (sha(token),))",
+    "note": "POST /api/logout deletes the session row on the server."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:253 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:301 \"UPDATE notes SET ... WHERE id=? AND user_id=?\"; app.py:313 \"DELETE FROM notes WHERE id=? AND user_id=?\"; app.py:321 r = own_note(uid, nid)",
+    "note": "Read, update, delete, share and unshare are all limited by user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:326 token = secrets.token_urlsafe(24)",
+    "note": "24 random bytes is 192 bits, from a CSPRNG."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:217 if count >= 10: return err(\"Too many failed attempts...\", 429)",
+    "note": "Allows 10 failures per (IP, email) in a 15-minute window. The counter is in memory and is wiped if it grows past 10,000 entries (app.py:224-225)."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:188 if len(pw) < 8: return err(\"Password must be at least 8 characters\", 400)",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:345 \"SELECT title, body, updated_at FROM notes WHERE share_token=?\", (token,)",
+    "note": "Every query uses ? placeholders. None is built with string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:11 for (const kid of kids) e.append(kid);",
+    "note": "Titles and bodies are added with append(string), which creates text nodes (static/app.js:64, 66, 114). The code never uses innerHTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:149-153 X-Content-Type-Options \"nosniff\", X-Frame-Options \"DENY\", Content-Security-Policy \"default-src 'self'; ...\"",
+    "note": "An after_request hook sets these headers on every response."
+  }
+}

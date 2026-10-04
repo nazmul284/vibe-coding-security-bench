@@ -1,0 +1,16 @@
+{
+  "name": "codex-gpt-5.6-sol-secure-r2",
+  "agent": "codex",
+  "model": "gpt-5.6-sol",
+  "prompt": "secure",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 155.3,
+  "usage": {
+    "input_tokens": 557924,
+    "cached_input_tokens": 531840,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 12792,
+    "reasoning_output_tokens": 1070
+  }
+}

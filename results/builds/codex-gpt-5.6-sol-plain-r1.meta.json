@@ -1,0 +1,16 @@
+{
+  "name": "codex-gpt-5.6-sol-plain-r1",
+  "agent": "codex",
+  "model": "gpt-5.6-sol",
+  "prompt": "plain",
+  "rep": 1,
+  "rc": 0,
+  "wall_s": 401.8,
+  "usage": {
+    "input_tokens": 401202,
+    "cached_input_tokens": 376832,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 14494,
+    "reasoning_output_tokens": 787
+  }
+}

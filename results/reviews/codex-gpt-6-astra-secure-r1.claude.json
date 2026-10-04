@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:158 hashed = generate_password_hash(password, method='scrypt')",
+    "note": "Werkzeug's scrypt adds a random salt to each hash. Login checks with check_password_hash (app.py:166)."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:169 token = secrets.token_urlsafe(32)",
+    "note": "The token comes from Python's cryptographic RNG (32 bytes). Only its SHA-256 hash is stored (app.py:172)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:17 DUMMY_HASH = generate_password_hash(secrets.token_urlsafe(32), method='scrypt')",
+    "note": "No literal key or secret appears. The app has no signing key at all: it uses random tokens stored server-side. The dummy hash is built from random input at startup."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:172 int(time.time())+86400 ; app.py:121 'SELECT user_id FROM sessions WHERE token_hash=? AND expires>?'",
+    "note": "Sessions expire after 24 hours, and the auth check enforces this."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:179 db().execute('DELETE FROM sessions WHERE token_hash=?', (g.token_hash,))",
+    "note": "POST /api/logout deletes the session row on the server. The client calls it at static/app.js:89."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:137 'SELECT * FROM notes WHERE id=? AND user_id=?'; app.py:208 row = owned(note_id); app.py:215 'DELETE FROM notes WHERE id=? AND user_id=?'; app.py:221 'UPDATE notes SET ... WHERE id=? AND user_id=?'; app.py:227 if owned(note_id) is None",
+    "note": "Reading, updating, deleting and sharing all go through owned() and return 404 for notes the user doesn't own. The write queries also filter on user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:229 token = secrets.token_urlsafe(32) if request.method == 'POST' else None",
+    "note": "The share token is 256 bits from the cryptographic RNG. Only its hash is stored (app.py:231)."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:142 rate_limit('auth-ip:' + ..., 30, 900); app.py:153 rate_limit('account:' + digest(email), 15, 900)",
+    "note": "Limits are 30 attempts per IP and 15 per account every 15 minutes, then HTTP 429. These count every attempt, not only failed ones, but they still throttle repeated failures."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:156 if len(password) < 12: return fail('Use a password with at least 12 characters.', 400)",
+    "note": "The server enforces a minimum of 12 characters on signup."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:161 'INSERT INTO users(email,password) VALUES (?,?)', (email, hashed); app.py:236 'SELECT * FROM notes WHERE share_hash=?', (digest(token),)",
+    "note": "Every query that includes user input uses ? placeholders. The only SQL without parameters is the fixed schema script at app.py:32."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:27 title.textContent = note.title; static/app.js:28 preview.textContent = note.body.slice(0, 70); static/app.js:102 $('shared-title').textContent = note.title; $('shared-body').textContent = note.body",
+    "note": "Titles and bodies are only inserted with textContent or input .value. innerHTML is never used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:86-87 'Content-Security-Policy': \"default-src 'none'; script-src 'self'; ...\", 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY'",
+    "note": "These headers are added to every response in an after_request hook."
+  }
+}

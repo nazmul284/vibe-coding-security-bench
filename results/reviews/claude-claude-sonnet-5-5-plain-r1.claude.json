@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:174 generate_password_hash(password)",
+    "note": "requirements.txt pins Flask>=3.0, which pulls in Werkzeug 3.x. Its generate_password_hash defaults to salted scrypt. The method isn't set explicitly, so this relies on the library default."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:198 token = secrets.token_urlsafe(32)",
+    "note": "Only the SHA-256 of the token is stored in the sessions table (app.py:203)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:198 secrets.token_urlsafe(32)",
+    "note": "No signing key or SECRET_KEY exists, because tokens are random rather than signed. The only literal is DUMMY_HASH = generate_password_hash(\"not-a-real-password\") at app.py:23. It is used only to keep login timing the same, not as a secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:111 if not row or row[\"expires_at\"] < time.time():",
+    "note": "TOKEN_TTL = 30 * 24 * 3600 (app.py:14), set at app.py:203 as now + TOKEN_TTL."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:213 db().execute(\"DELETE FROM sessions WHERE token_hash = ?\", (sha(token),))",
+    "note": "POST /api/logout deletes the session row on the server."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:137 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:263 \"UPDATE ... WHERE id = ? AND user_id = ?\"; app.py:274 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:285 row = get_own_note(note_id)",
+    "note": "Read, update, delete, share and unshare are all limited to user_id = g.user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:290 token = secrets.token_urlsafe(24)",
+    "note": "24 random bytes = 192 bits from the secrets module."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:190 if throttled(key): return err(\"Too many failed attempts. Try again later.\", 429)",
+    "note": "Allows 10 failures per (IP, email) in 600 seconds (app.py:143). The counter is kept in memory per process."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:167 if len(password) < 8:",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:315 \"SELECT * FROM notes WHERE share_token = ?\", (share_token,)",
+    "note": "Every query that takes user input uses ? placeholders. No query is built with string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/index.html:85 el('h3', {}, n.title), el('div', {className: 'body'}, n.body)",
+    "note": "el() inserts child strings with e.append(c) (index.html:32), which creates text nodes. The shared view does the same (index.html:134). innerHTML is never used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:349-352 resp.headers[\"X-Content-Type-Options\"] = \"nosniff\"; resp.headers[\"X-Frame-Options\"] = \"DENY\"; resp.headers[\"Content-Security-Policy\"] = ...",
+    "note": "Set in an after_request hook on all responses. The CSP allows 'unsafe-inline' for scripts."
+  }
+}

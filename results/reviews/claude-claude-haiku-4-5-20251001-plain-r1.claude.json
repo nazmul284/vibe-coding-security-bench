@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:39 const hashedPassword = await bcrypt.hash(password, 10);",
+    "note": "bcrypt with cost 10. bcrypt adds its own salt."
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "server.js:11 const jwtSecret = 'your-secret-key-change-in-production'; / server.js:73 jwt.sign({ userId: user.id, email: user.email }, jwtSecret, ...)",
+    "note": "The JWT is signed with a hardcoded string, not a random key or one read from configuration."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:11 const jwtSecret = 'your-secret-key-change-in-production';",
+    "note": "The signing key is a literal in the source."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:73 jwt.sign(..., jwtSecret, { expiresIn: '30d' })",
+    "note": "Tokens expire after 30 days, and jwt.verify at server.js:23 enforces exp."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/script.js:180 localStorage.removeItem('token');",
+    "note": "Logout only happens in the browser. The server has no logout endpoint and no token denylist."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:111 'SELECT ... FROM notes WHERE id = ? AND user_id = ?'; server.js:132 (update), server.js:150 (delete), server.js:166 (share) all use 'SELECT id FROM notes WHERE id = ? AND user_id = ?'",
+    "note": "Read, update, delete and share all check the owner before acting."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.js:172 const shareToken = crypto.randomBytes(32).toString('hex');",
+    "note": "256 bits from a CSPRNG."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:53 app.post('/api/login', async (req, res) => {",
+    "note": "No rate limiter, failed-attempt counter or lockout anywhere."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:35 if (!email || !password) {",
+    "note": "Signup only checks that a password is present. There is no minimum length."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:40 run('INSERT INTO users (email, password) VALUES (?, ?)', [email, hashedPassword]); server.js:184 'SELECT note_id FROM shares WHERE share_token = ?'",
+    "note": "Every query that takes user input uses ? placeholders. The db.js helpers pass params through to sqlite3."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/script.js:49 ${escapeHtml(note.title || 'Untitled')}; public/view.html:80 <h1>${escapeHtml(note.title)}</h1>; public/view.html:83 ${escapeHtml(note.body)}",
+    "note": "escapeHtml uses textContent and then reads innerHTML (script.js:185-189, view.html:97-98). The editor sets title and body with .value (script.js:69-70)."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:13-14 app.use(bodyParser.json()); app.use(express.static(...));",
+    "note": "No helmet and no code sets CSP, X-Content-Type-Options or X-Frame-Options."
+  }
+}

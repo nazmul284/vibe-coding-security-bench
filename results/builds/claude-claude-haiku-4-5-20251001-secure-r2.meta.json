@@ -1,0 +1,12 @@
+{
+  "name": "claude-claude-haiku-4-5-20251001-secure-r2",
+  "agent": "claude",
+  "model": "claude-haiku-4-5-20251001",
+  "prompt": "secure",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 129.6,
+  "cost_usd": 0.19946449999999993,
+  "turns": 17,
+  "is_error": false
+}

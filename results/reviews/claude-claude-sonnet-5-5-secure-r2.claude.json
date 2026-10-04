@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:245 generate_password_hash(password)",
+    "note": "Werkzeug's generate_password_hash uses salted scrypt by default. Flask>=3.0 (requirements.txt:1) pulls in Werkzeug 3.x. Checked with check_password_hash at app.py:273."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:279 token = secrets.token_urlsafe(32)",
+    "note": "256-bit token from the secrets module. Only its SHA-256 hash is stored (app.py:280)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:279 secrets.token_urlsafe(32)",
+    "note": "Tokens are random and looked up in the database, so there is no signing key and no SECRET_KEY. The only literal is DUMMY_HASH = generate_password_hash(\"not-a-real-password\") (app.py:222). It is a timing-equalization dummy, not a secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:159 \"WHERE token_hash = ? AND expires_at > ?\"",
+    "note": "expires_at is set to now + TOKEN_LIFETIME (30 days, app.py:19, app.py:281)."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:291 db.execute(\"DELETE FROM tokens WHERE token_hash = ?\", (g.token_hash,))",
+    "note": "POST /api/logout deletes the token row on the server. The client calls it at static/app.js:34."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:178 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"",
+    "note": "Read uses get_own_note (app.py:330). Update uses get_own_note plus WHERE id = ? AND user_id = ? (app.py:337, app.py:351). Delete uses WHERE id = ? AND user_id = ? (app.py:361). Share and unshare use get_own_note and a user_id filter (app.py:370, app.py:377, app.py:387)."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:375 token = secrets.token_urlsafe(32)",
+    "note": "256 bits from a CSPRNG."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:265 limiter.blocked((\"login-ip\", ip), 30, WINDOW) or limiter.blocked((\"login-email\", email, ip), 8, WINDOW)",
+    "note": "Failed logins are recorded (app.py:275-276) in a 15-minute window, and the endpoint returns 429 once the limit is hit. The limiter is in memory only. The per-email key also includes the IP."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:237 not (MIN_PASSWORD <= len(password) <= MAX_PASSWORD)",
+    "note": "MIN_PASSWORD = 10 (app.py:21)."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:401 \"SELECT * FROM notes WHERE share_token = ?\", (share_token,)",
+    "note": "Every query that takes user input uses ? placeholders (app.py:159, 244, 270, 280, 291, 301, 320, 350, 361, 377, 387, 401). There is no string formatting in any SQL."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:60 b.textContent = n.title; static/shared.js:6-7 .textContent = n.title / n.body",
+    "note": "The editor sets titles and bodies through input .value (static/app.js:70-71). The only innerHTML match is a comment at static/app.js:1."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:185 resp.headers[\"Content-Security-Policy\"] = (\"default-src 'none'; script-src 'self'; ...",
+    "note": "Set on every response by an after_request hook. X-Content-Type-Options: nosniff and X-Frame-Options: DENY are also set (app.py:190-191)."
+  }
+}

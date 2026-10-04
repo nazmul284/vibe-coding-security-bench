@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:38-39 salt = salt or secrets.token_bytes(16); hashlib.pbkdf2_hmac(\"sha256\", password.encode(\"utf-8\"), salt, 310_000)",
+    "note": "PBKDF2-SHA256 with a random 16-byte salt and 310,000 iterations."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:250 token = secrets.token_urlsafe(32)",
+    "note": "Login tokens come from Python's secrets module, which is a cryptographic RNG."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:250 token = secrets.token_urlsafe(32)",
+    "note": "No signing key exists, because tokens are random values whose hashes are stored in the database. I found no secret literals or fallback defaults in server.py or static/."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "server.py:159-160 \"SELECT users.id, users.email FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ?\"",
+    "note": "sessions.created_at is stored but the lookup never checks it, so tokens never expire."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:140 $('#logout').addEventListener('click', showAuth); app.js:23 localStorage.removeItem('noteshare_token')",
+    "note": "Logout only removes the token in the browser. The server has no logout endpoint (do_POST at server.py:189-200 has no such route) and never deletes sessions."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:302 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; server.py:324 \"UPDATE notes SET ... WHERE id = ? AND user_id = ?\"; server.py:338 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; server.py:350 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"",
+    "note": "Read, update, delete and share are all limited to the note's owner."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:356 share_token = secrets.token_urlsafe(24)",
+    "note": "24 bytes from a cryptographic RNG is 192 bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.py:248-249 if not user or not password_matches(...): return self.send_json(401, {\"error\": \"Invalid email or password\"})",
+    "note": "Failed logins are not counted, throttled or locked out."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:223 if not isinstance(password, str) or len(password) < 8:",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:247 db.execute(\"SELECT * FROM users WHERE email = ?\", (email,)); server.py:366 \"SELECT * FROM notes WHERE share_token_hash = ?\"",
+    "note": "Every statement that includes user input uses ? placeholders. None builds SQL by string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:46 title.textContent = note.title; app.js:48 preview.textContent = note.body; app.js:148 $('#shared-title').textContent = note.title; app.js:150 $('#shared-body').textContent = note.body",
+    "note": "Editor fields use .value (app.js:64-65). innerHTML is not used anywhere."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "server.py:116-117 self.send_header(\"X-Content-Type-Options\", \"nosniff\"); self.send_header(\"X-Frame-Options\", \"DENY\")",
+    "note": "Set in end_headers(), so every response gets them. There is no CSP."
+  }
+}

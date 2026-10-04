@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <meta name="description" content="Private notes with simple sharing.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="NoteShare home"><span>N</span> NoteShare</a>
+    <button id="logout" class="ghost hidden">Log out</button>
+  </header>
+
+  <main>
+    <section id="auth-view" class="auth-card">
+      <p class="eyebrow">YOUR THOUGHTS, YOUR SPACE</p>
+      <h1>Notes that stay yours.</h1>
+      <p class="lede">Write privately. Share only what you choose.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-mode="login">Log in</button>
+        <button class="tab" data-mode="signup">Sign up</button>
+      </div>
+      <form id="auth-form">
+        <label>Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+        <label>Password<input id="password" type="password" minlength="8" required placeholder="At least 8 characters"></label>
+        <button id="auth-submit" class="primary" type="submit">Log in</button>
+        <p id="auth-error" class="error" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="app-view" class="app-view hidden">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <div><p class="eyebrow">YOUR NOTEBOOK</p><h2>Notes</h2></div>
+          <button id="new-note" class="new-button" aria-label="Create note">+</button>
+        </div>
+        <div id="note-list" class="note-list"></div>
+      </aside>
+      <section class="editor-panel">
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon">✦</div>
+          <h2>A clear page awaits.</h2>
+          <p>Create a note to start writing.</p>
+          <button id="empty-new" class="primary">Create a note</button>
+        </div>
+        <form id="note-form" class="note-form hidden">
+          <input id="note-title" class="title-input" maxlength="200" required placeholder="Untitled note" aria-label="Note title">
+          <textarea id="note-body" maxlength="100000" placeholder="Start writing…" aria-label="Note body"></textarea>
+          <div class="editor-actions">
+            <span id="save-status" class="muted"></span>
+            <button id="delete-note" class="danger" type="button">Delete</button>
+            <button id="share-note" class="ghost" type="button">Share</button>
+            <button class="primary" type="submit">Save note</button>
+          </div>
+          <div id="share-box" class="share-box hidden">
+            <label>Anyone with this link can read this note</label>
+            <div><input id="share-link" readonly><button id="copy-link" type="button">Copy</button></div>
+          </div>
+          <p id="note-error" class="error" role="alert"></p>
+        </form>
+      </section>
+    </section>
+
+    <section id="shared-view" class="shared-card hidden">
+      <p class="eyebrow">A SHARED NOTE</p>
+      <h1 id="shared-title"></h1>
+      <p id="shared-date" class="muted"></p>
+      <div id="shared-body" class="shared-body"></div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:134 \"const hashedPassword = await bcrypt.hash(password, 10);\"; server.js:138 \"[email, hashedPassword]\"",
+    "note": "Stores salted bcrypt hashes with cost 10."
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "server.js:171 \"jwt.sign({ id: user.id, email: user.email }, jwtSecret\"; server.js:12 \"const jwtSecret = 'noteshare-secret-key-change-in-production';\"",
+    "note": "JWT signing uses a fixed literal key, not a random or configuration-supplied key."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:12 \"const jwtSecret = 'noteshare-secret-key-change-in-production';\"",
+    "note": "Hardcoded signing secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:172 \"expiresIn: '30d'\"; server.js:76 \"jwt.verify(token, jwtSecret, (err, user) => {\"",
+    "note": "Tokens expire after 30 days; verification rejects expired tokens."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/index.html:541 \"currentToken = null;\"; public/index.html:542 \"localStorage.removeItem('token');\"; server.js:76 \"jwt.verify(token, jwtSecret, (err, user) => {\"",
+    "note": "Logout only clears client state. No server-side token revocation or session deletion exists."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:219, server.js:243, server.js:267, server.js:286 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; server.js:220 \"[req.params.id, req.user.id]\"",
+    "note": "Read, update, delete and share-by-id routes check ownership. Public shared reads require a share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.js:67 \"return crypto.randomBytes(32).toString('hex');\"",
+    "note": "Share tokens contain 256 cryptographically random bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:151 \"app.post('/api/login', async (req, res) => {\"; server.js:168 \"return res.status(401).json({ error: 'Invalid credentials' });\"",
+    "note": "No throttling, failed-attempt tracking or lockout is implemented."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:130 \"if (password.length < 6) {\"",
+    "note": "Signup permits passwords of six or seven characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:159 \"dbGet('SELECT * FROM users WHERE email = ?', [email])\"; server.js:252 \"UPDATE notes SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?\"; server.js:253 \"[title, body || '', req.params.id]\"",
+    "note": "All SQL statements containing user input use placeholders and parameter arrays."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/index.html:662 \"<h3>${escapeHtml(note.title)}</h3>\"; public/index.html:663 \"<p>${escapeHtml(note.body)}</p>\"; public/index.html:832 \"div.textContent = text;\"; public/index.html:685 \"document.getElementById('detailTitle').textContent = note.title;\"; public/index.html:686 \"document.getElementById('detailBody').textContent = note.body;\"; public/index.html:848 \"document.getElementById('sharedTitle').textContent = note.title;\"; public/index.html:849 \"document.getElementById('sharedBody').textContent = note.body;\"",
+    "note": "List content is escaped; detail and shared views use textContent."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:14 \"app.use(bodyParser.json());\"; server.js:15 \"app.use(express.static('public'));\"",
+    "note": "No code sets Content-Security-Policy or the X-Content-Type-Options and X-Frame-Options pair."
+  }
+}

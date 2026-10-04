@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="screen active">
+      <div class="auth-card">
+        <h1>NoteShare</h1>
+        <p class="tagline">Share your thoughts, securely</p>
+
+        <div class="auth-form">
+          <div id="login-form" class="form-section">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email" class="input">
+            <input type="password" id="login-password" placeholder="Password" class="input">
+            <button id="login-btn" class="btn btn-primary">Login</button>
+            <p class="auth-switch">Don't have an account? <a href="#" onclick="switchToSignup()">Sign up</a></p>
+          </div>
+
+          <div id="signup-form" class="form-section" style="display:none;">
+            <h2>Create Account</h2>
+            <input type="email" id="signup-email" placeholder="Email" class="input">
+            <input type="password" id="signup-password" placeholder="Password" class="input">
+            <input type="password" id="signup-confirm" placeholder="Confirm Password" class="input">
+            <button id="signup-btn" class="btn btn-primary">Sign Up</button>
+            <p class="auth-switch">Already have an account? <a href="#" onclick="switchToLogin()">Login</a></p>
+          </div>
+
+          <div id="auth-error" class="error-message"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Screen -->
+    <div id="notes-screen" class="screen">
+      <header class="header">
+        <h1>NoteShare</h1>
+        <div class="header-actions">
+          <span id="user-email" class="user-email"></span>
+          <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="sidebar">
+          <button id="new-note-btn" class="btn btn-primary btn-large">+ New Note</button>
+          <div id="notes-list" class="notes-list"></div>
+        </div>
+
+        <div class="editor">
+          <div id="editor-empty" class="editor-empty">
+            <p>Select a note or create a new one</p>
+          </div>
+
+          <div id="editor-content" class="editor-content" style="display:none;">
+            <input type="text" id="note-title" placeholder="Note title" class="note-title">
+            <textarea id="note-body" placeholder="Write your note here..." class="note-body"></textarea>
+
+            <div class="editor-actions">
+              <button id="save-note-btn" class="btn btn-primary">Save</button>
+              <button id="delete-note-btn" class="btn btn-danger">Delete</button>
+              <button id="share-note-btn" class="btn btn-secondary">Share</button>
+            </div>
+
+            <div id="share-url-display" class="share-url-display" style="display:none;">
+              <p>Share this link:</p>
+              <input type="text" id="share-url" readonly class="share-url-input">
+              <button id="copy-share-url-btn" class="btn btn-secondary">Copy Link</button>
+            </div>
+
+            <div id="editor-message" class="message"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Shared Note Screen -->
+    <div id="shared-screen" class="screen">
+      <div class="shared-container">
+        <h1>NoteShare</h1>
+        <div class="shared-note">
+          <h2 id="shared-title"></h2>
+          <div id="shared-body" class="shared-body"></div>
+          <p id="shared-error" class="error-message"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

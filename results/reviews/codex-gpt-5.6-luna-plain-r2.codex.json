@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:23 \"salt = crypto.randomBytes(16).toString('hex')\"; server.js:24 \"crypto.scryptSync(password, salt, 64)\"",
+    "note": "Passwords use scrypt with a random salt."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.js:76 \"const token = crypto.randomBytes(32).toString('hex');\"",
+    "note": ""
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.js:76 \"crypto.randomBytes(32)\"; server.js:102 \"crypto.randomBytes(18)\"",
+    "note": "No literal signing key, secret, or fallback secret appears in the source."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "server.js:52 \"db.sessions.find(s => s.token === match[1])\"; server.js:53 \"return session ? db.users.find(u => u.id === session.user_id) : null;\"",
+    "note": "Authentication does not check session age or expiration."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/index.html:22 \"function logout(){localStorage.removeItem('noteshare_token');location.reload()}\"",
+    "note": "Logout is client-only, with no server logout endpoint. A subsequent successful login does delete prior sessions at server.js:77."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:58 \"n.id === noteId && n.user_id === user.id\"; server.js:100 \"const note = noteForUser(user, noteId);\"; server.js:101 \"if (!note) return fail(res, 404, 'Note not found.');\"",
+    "note": "The owner check precedes reading, updating, deleting, and sharing by note id. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.js:102 \"note.share_token ||= crypto.randomBytes(18).toString('hex')\"",
+    "note": "Share tokens contain 144 random bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:75 \"if (!user || !checkPassword(body.password, user.password_hash)) return fail(res, 401, 'Invalid email or password.');\"",
+    "note": "Failed logins have no attempt tracking, throttling, or lockout."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:56 \"body.password.length >= 6\"; server.js:66 \"if (!validCredentials(body)) return fail(res, 400\"",
+    "note": "Signup accepts passwords of six or seven characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:16 \"JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))\"; server.js:20 \"fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2))\"",
+    "note": "The app uses a JSON file, not SQL."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/index.html:10 \"${esc(n.title)}\" and \"${esc(n.body)}\"; public/index.html:16 \"${esc(n.title)}\"; public/index.html:17 \"$('title').value=n.title;$('body').value=n.body\"; public/index.html:22 \"String(s).replace(/[&<>\\\"']/g\"",
+    "note": "Note content is escaped before HTML insertion or assigned to input values."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:37 \"'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store'\"; server.js:117 \"'Content-Type': 'text/html; charset=utf-8', 'Content-Length': page.length\"",
+    "note": "Neither response path sets CSP or the required X-Content-Type-Options and X-Frame-Options pair."
+  }
+}

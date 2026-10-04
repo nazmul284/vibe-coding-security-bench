@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>NoteShare</h1>
+    <div id="user-bar" hidden>
+      <span id="user-email"></span>
+      <button id="logout-btn" class="secondary">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="message" role="status" hidden></p>
+
+    <section id="auth-view" hidden>
+      <form id="auth-form" class="card">
+        <h2 id="auth-title">Log in</h2>
+        <label>Email <input type="email" id="auth-email" autocomplete="username" required maxlength="254"></label>
+        <label>Password <input type="password" id="auth-password" autocomplete="current-password" required minlength="8" maxlength="256"></label>
+        <button type="submit" id="auth-submit">Log in</button>
+        <p class="switch"><span id="auth-switch-text">No account yet?</span>
+          <button type="button" id="auth-switch" class="link">Sign up</button></p>
+      </form>
+    </section>
+
+    <section id="notes-view" hidden>
+      <div class="layout">
+        <aside class="card">
+          <button id="new-note-btn">+ New note</button>
+          <ul id="note-list"></ul>
+          <p id="empty-list" class="muted" hidden>No notes yet.</p>
+        </aside>
+        <form id="editor" class="card">
+          <label>Title <input id="note-title" required maxlength="200"></label>
+          <label>Body <textarea id="note-body" rows="14" maxlength="100000"></textarea></label>
+          <div class="actions">
+            <button type="submit" id="save-btn">Save</button>
+            <button type="button" id="share-btn" class="secondary" hidden>Create share link</button>
+            <button type="button" id="delete-btn" class="danger" hidden>Delete</button>
+          </div>
+          <div id="share-box" hidden>
+            <p>Anyone with this link can read this note:</p>
+            <input id="share-link" readonly>
+            <div class="actions">
+              <button type="button" id="copy-btn" class="secondary">Copy link</button>
+              <button type="button" id="unshare-btn" class="danger">Turn off sharing</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

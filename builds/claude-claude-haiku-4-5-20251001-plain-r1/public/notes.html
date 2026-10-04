@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteShare - My Notes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <h1>NoteShare</h1>
+    <button class="btn btn-danger" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container notes-container">
+    <div class="notes-list">
+      <h2>My Notes</h2>
+      <button class="btn btn-primary" onclick="openNewNoteModal()">+ New Note</button>
+      <div id="notesList"></div>
+    </div>
+
+    <div class="note-editor" id="noteEditor" style="display: none;">
+      <div class="editor-header">
+        <input type="text" id="noteTitle" placeholder="Note Title" class="note-title-input">
+        <div class="editor-buttons">
+          <button class="btn btn-primary" onclick="saveNote()">Save</button>
+          <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
+        </div>
+      </div>
+      <textarea id="noteBody" placeholder="Write your note here..."></textarea>
+      <div id="shareSection" class="share-section" style="display: none;">
+        <label>Share this note:</label>
+        <div class="share-link-box">
+          <input type="text" id="shareLink" readonly>
+          <button class="btn btn-small" onclick="copyShareLink()">Copy Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for sharing -->
+  <div id="shareModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Share Note</h2>
+        <button class="close" onclick="closeShareModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Generating share link...</p>
+        <div id="shareModalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:71 hashlib.pbkdf2_hmac(\"sha256\", password.encode(), salt, 310_000)",
+    "note": "PBKDF2-SHA256 with 310,000 iterations and a random 16-byte salt from secrets.token_bytes(16) (server.py:70)."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:256 token = secrets.token_urlsafe(32)",
+    "note": "Opaque random token from the secrets module. Only its SHA-256 hash is stored in the sessions table."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:256 secrets.token_urlsafe(32)",
+    "note": "The code has no signing key, secret, or literal fallback. Tokens are random and looked up in the database, so no key is needed."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "server.py:147 \"SELECT user_id FROM sessions WHERE token_hash = ?\"",
+    "note": "The session lookup never checks created_at and no other code expires sessions, so tokens work forever."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:147-149 $(\"#logout\").addEventListener(\"click\", () => { state.token = null; ... localStorage.removeItem(\"noteshare_token\");",
+    "note": "Logout only clears the token in the browser. The server has no logout endpoint and never runs DELETE FROM sessions (routes at server.py:180-205)."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:313 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"",
+    "note": "Reading (server.py:321), updating (server.py:333 and 336), deleting (server.py:352 \"DELETE FROM notes WHERE id = ? AND user_id = ?\") and sharing (server.py:364) all go through an owner check."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:367 secrets.token_urlsafe(24)",
+    "note": "24 random bytes is 192 bits from a cryptographic RNG."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.py:254-255 if not user or ... not check_password(...): return self.error_json(401, \"Invalid email or password\")",
+    "note": "Failed logins are not counted, delayed, or locked out anywhere in the code."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:228 if not isinstance(password, str) or len(password) < 8:",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:252 \"SELECT id, password_hash FROM users WHERE email = ?\", (email,)",
+    "note": "Every query uses ? placeholders. The only SQL without parameters is the fixed schema script (server.py:41) and the PRAGMA statements."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:51 title.textContent = note.title; static/app.js:160 $(\"#shared-body\").textContent = note.body;",
+    "note": "Note titles and bodies are set with textContent or input .value. The static files contain no innerHTML, outerHTML or insertAdjacentHTML."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.py:216 self.send_header(\"X-Content-Type-Options\", \"nosniff\")",
+    "note": "X-Content-Type-Options is only set on static files. The code never sets X-Frame-Options or Content-Security-Policy."
+  }
+}

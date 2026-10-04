@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:58 \"salt = salt or secrets.token_bytes(16)\"; app.py:59 \"hashlib.pbkdf2_hmac(\"sha256\", password.encode(), salt, 200_000)\"",
+    "note": "Passwords use salted PBKDF2 with 200,000 iterations."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:195 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use a cryptographic RNG."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:58 \"secrets.token_bytes(16)\"; app.py:195 \"secrets.token_urlsafe(32)\"; app.py:215 \"secrets.token_urlsafe(24)\"",
+    "note": "No literal secret, signing key, or secret fallback appears in the source."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "app.py:113 \"SELECT user_id FROM sessions WHERE token_hash = ?\"; app.py:114 \"return row[\"user_id\"] if row else None\"",
+    "note": "Authentication checks session existence without checking its age or expiration."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "index.html:25 \"$('#logout').onclick=()=>{localStorage.removeItem('noteshare_token');token=null;showAuth()}\"",
+    "note": "Logout is client-only; no server endpoint deletes or invalidates sessions."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:165 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:236 \"UPDATE notes SET title=?, body=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?\"; app.py:251 \"DELETE FROM notes WHERE id=? AND user_id=?\"; app.py:213 \"SELECT 1 FROM notes WHERE id=? AND user_id=?\"",
+    "note": "Reading, updating, deleting, and sharing by note ID all check ownership. Public shared reads require a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:215 \"share = secrets.token_urlsafe(24)\"",
+    "note": "Share tokens contain 192 bits of cryptographic randomness."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "app.py:193 \"if not user or not password_ok(password, user[\"password_hash\"]):\"; app.py:194 \"return self.error(\"Invalid email or password\", 401)\"",
+    "note": "Failed logins have no attempt counter, throttling, or lockout."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:181 \"if not isinstance(password, str) or len(password) < 8:\"; app.py:182 \"return self.error(\"Password must be at least 8 characters\")\"",
+    "note": "Signup rejects passwords shorter than eight characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:192 \"conn.execute(\"SELECT * FROM users WHERE email=?\", (email,))\"; app.py:206 \"conn.execute(\"INSERT INTO notes(user_id,title,body) VALUES(?,?,?)\", (uid, title, body))\"; app.py:216 \"conn.execute(\"INSERT INTO shares(share_token,note_id) VALUES(?,?)\", (share, note_id))\"",
+    "note": "All SQL statements containing user input use bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "index.html:22 \"${esc(n.title)}\" and \"${esc(n.body)||'<em>No content yet</em>'}\"; index.html:25 \"function esc(s){return String(s).replace(/[&<>'\"]/g\"; app.py:139 \"title = html.escape(row[\"title\"])\"; app.py:140 \"body = html.escape(row[\"body\"])\"",
+    "note": "Note titles and bodies are escaped before HTML insertion; editing uses input values."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "app.py:92 \"self.send_header(\"Access-Control-Allow-Origin\", \"*\")\"; app.py:93 \"self.end_headers()\"; app.py:129 \"self.send_header(\"Content-Length\", str(len(data)))\"; app.py:130 \"self.end_headers()\"",
+    "note": "The server sets neither Content-Security-Policy nor the X-Content-Type-Options and X-Frame-Options pair."
+  }
+}

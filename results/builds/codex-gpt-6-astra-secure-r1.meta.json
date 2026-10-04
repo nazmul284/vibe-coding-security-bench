@@ -1,0 +1,16 @@
+{
+  "name": "codex-gpt-6-astra-secure-r1",
+  "agent": "codex",
+  "model": "gpt-6-astra",
+  "prompt": "secure",
+  "rep": 1,
+  "rc": 0,
+  "wall_s": 671.2,
+  "usage": {
+    "input_tokens": 662252,
+    "cached_input_tokens": 631168,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 14191,
+    "reasoning_output_tokens": 464
+  }
+}

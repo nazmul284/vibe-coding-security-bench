@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:97 \"salt = secrets.token_bytes(16)\"; server.py:98 \"hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)\"; server.py:395 \"(email, hash_password(password), int(time.time()))\"",
+    "note": ""
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:414 \"token = secrets.token_urlsafe(32)\"",
+    "note": ""
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:112 \"_DUMMY_HASH = hash_password(secrets.token_hex(16))\"; server.py:414 \"token = secrets.token_urlsafe(32)\"",
+    "note": "No literal secret, signing key, or secret fallback appears in the source."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.py:23 \"SESSION_LIFETIME = 30 * 24 * 3600\"; server.py:419 \"now + SESSION_LIFETIME\"; server.py:238 \"if row is None or row[\"expires_at\"] < time.time():\"",
+    "note": "Sessions expire after 30 days."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "server.py:306 \"if parts == [\"logout\"]:\"; server.py:428 \"conn.execute(\"DELETE FROM sessions WHERE token_hash = ?\", (sha256(token),))\"; server.py:429 \"conn.commit()\"",
+    "note": ""
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:352 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; server.py:324 \"note_json(self.own_note(user_id, note_id))\"; server.py:450 \"self.own_note(user_id, note_id)\"; server.py:461 \"self.own_note(user_id, note_id)\"; server.py:468 \"row = self.own_note(user_id, note_id)\"",
+    "note": "Read, update, delete, and share by note ID enforce ownership. Public reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:471 \"token = secrets.token_urlsafe(24)\"",
+    "note": "24 cryptographically random bytes provide 192 bits."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "server.py:125 \"if len(recent) >= LOGIN_MAX_FAILS:\"; server.py:404 \"keys = (\"ip:\" + self.client_ip(), \"email:\" + email)\"; server.py:405 \"if too_many_failures(*keys):\"; server.py:406 \"raise ApiError(429, \"Too many failed login attempts. Please wait a few minutes.\")\"; server.py:411 \"record_failure(*keys)\"",
+    "note": "Blocks after 10 failures within 15 minutes per IP or email; counters are in memory."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:27 \"MIN_PASSWORD_LEN = 8\"; server.py:389 \"if len(password) < MIN_PASSWORD_LEN:\"; server.py:390 \"raise ApiError(400, \"Password must be at least %d characters\" % MIN_PASSWORD_LEN)\"",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:408 \"SELECT id, password_hash FROM users WHERE email = ?\"; server.py:454 \"UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id = ?\"; server.py:490 \"SELECT title, body, updated_at FROM notes WHERE share_token = ?\"",
+    "note": "All SQL containing user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:59 \"li.textContent = (n.share_token ? \"\ud83d\udd17 \" : \"\") + n.title\"; static/app.js:69 \"$(\"note-title\").value = n ? n.title : \"\"\"; static/app.js:70 \"$(\"note-body\").value = n ? n.body : \"\"\"; static/shared.js:14 \"titleEl.textContent = res.data.title\"; static/shared.js:15 \"bodyEl.textContent = res.data.body\"",
+    "note": ""
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "server.py:165 \"\"X-Content-Type-Options\": \"nosniff\"\"; server.py:166 \"\"X-Frame-Options\": \"DENY\"\"; server.py:168 \"\"Content-Security-Policy\": \"default-src 'self'; script-src 'self'; style-src 'self'; \"\"; server.py:190 \"self.send_header(k, v)\"; server.py:206 \"self.send_header(k, v)\"",
+    "note": "Headers are applied to JSON and static-file responses."
+  }
+}

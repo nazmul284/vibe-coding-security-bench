@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoteShare</title><link rel="stylesheet" href="/style.css"></head>
+<body><header><div class="brand">Note<span>Share</span></div><button id="logout" class="ghost hidden">Log out</button></header>
+<main>
+  <section id="auth" class="card auth"><p class="eyebrow">YOUR THOUGHTS, KEPT SIMPLE</p><h1>A quiet place for your notes.</h1><p class="sub">Private by default. Share only when you choose.</p>
+    <div class="tabs"><button data-mode="login" class="active">Log in</button><button data-mode="signup">Sign up</button></div>
+    <form id="auth-form"><label>Email<input id="email" type="email" maxlength="254" autocomplete="email" required></label><label>Password<input id="password" type="password" minlength="12" maxlength="1024" autocomplete="current-password" required></label><button class="primary" type="submit">Log in</button><p id="auth-message" class="message"></p></form>
+  </section>
+  <section id="notes-app" class="hidden app"><aside><div class="side-title"><h2>Your notes</h2><button id="new-note" class="round" title="New note">+</button></div><div id="note-list"></div></aside>
+    <article class="editor"><div id="empty" class="empty"><div class="empty-icon">✦</div><h2>Select a note</h2><p>Choose a note or create a new one.</p></div>
+      <form id="note-form" class="hidden"><input id="title" class="title" maxlength="200" placeholder="Note title" required><textarea id="body" maxlength="1000000" placeholder="Start writing…"></textarea><div class="actions"><button class="primary" type="submit">Save note</button><button id="share" type="button" class="ghost">Share</button><button id="delete" type="button" class="danger">Delete</button></div><p id="note-message" class="message"></p><div id="share-box" class="share-box hidden"><span id="share-url"></span><button id="copy" type="button">Copy</button></div></form>
+    </article></section>
+  <section id="shared" class="card shared hidden"><p class="eyebrow">A SHARED NOTE</p><h1 id="shared-title"></h1><div id="shared-body"></div></section>
+</main><script src="/app.js" defer></script></body></html>

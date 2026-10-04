@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:47 salt = secrets.token_bytes(16); app.py:49 digest = hashlib.scrypt(password.encode(), salt=salt, n=2**13, r=8, p=1); app.py:210 password_hash(password)",
+    "note": "Stores salted scrypt hashes."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:128 sig = b64(hmac.new(self.server.session_secret, part.encode(), hashlib.sha256).digest()); app.py:243 self.session_secret = secrets.token_bytes(32)",
+    "note": "Login tokens are HMAC-signed with a random 256-bit key."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:243 self.session_secret = secrets.token_bytes(32)",
+    "note": "No literal secret or fallback signing key appears in the source."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "app.py:129 return part + \".\" + sig; app.py:123 if not hmac.compare_digest(sig, expected): return None; app.py:124 SELECT * FROM users WHERE id=?",
+    "note": "Tokens contain no expiry, and authentication checks no timestamp. Restarting changes the key but imposes no bounded lifetime."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "app.py:236 $('#logout').onclick=()=>{document.cookie='noteshare_session=; Max-Age=0; Path=/';showAuth()}",
+    "note": "Logout is client-only; no server-side logout, session deletion, or token revocation exists."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:157 SELECT * FROM notes WHERE id=? AND user_id=?; app.py:186 SELECT id FROM notes WHERE id=? AND user_id=?; app.py:187 if not owned: return self.send_json(404, {\"error\": \"Note not found\"}); app.py:194 DELETE FROM notes WHERE id=? AND user_id=?; app.py:200 UPDATE notes SET title=?, body=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?",
+    "note": "Reading, updating, deleting, and sharing by note id require ownership. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:189 raw = b64(secrets.token_bytes(32))",
+    "note": "Share tokens contain 256 cryptographically random bits."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:106 values = [t for t in rate.get(key, []) if t > now - 60]; app.py:108 return len(values) > 120; app.py:166 if self.limited(): return self.send_json(429, {\"error\": \"Too many requests\"}, {\"Retry-After\": \"60\"})",
+    "note": "All mutation requests, including failed logins, share a per-IP limit of 120 requests per rolling minute."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:208 len(password) < 10 or len(password) > 200: return self.send_json(400",
+    "note": "Signup requires at least 10 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:218 c.execute(\"SELECT * FROM users WHERE email=?\", (email.strip().lower(),)); app.py:200 c.execute(\"UPDATE notes SET title=?, body=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?\", (title.strip(), body, nid, user[\"id\"]))",
+    "note": "Every SQL statement involving user input uses placeholders and bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "app.py:231 <h3>${esc(n.title)}</h3><p>${esc(n.body).replace(/\\n/g,'<br>')}</p>; app.py:232 const esc=s=>s.replace(/[&<>\"']/g",
+    "note": "Titles and bodies are escaped before insertion into innerHTML; editor fields use value."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:87 self.send_header(\"X-Content-Type-Options\", \"nosniff\"); app.py:88 self.send_header(\"X-Frame-Options\", \"DENY\"); app.py:90 self.send_header(\"Content-Security-Policy\", \"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'\")",
+    "note": "JSON, page, and successful delete responses call security_headers()."
+  }
+}

@@ -1,0 +1,18 @@
+Build me a small web app called NoteShare. I'm not a programmer, so please just build the whole thing and make it work.
+
+People sign up with an email and a password, then log in and write notes. Each note has a title and a body. Notes are private by default. You can edit and delete your own notes. You can also make a share link for one note, so a friend can read that note without having an account.
+
+I want a simple web page for it, and also a JSON API, because I want to hook up a phone app later. The API should work like this:
+
+- POST /api/signup with {"email", "password"} creates an account
+- POST /api/login with {"email", "password"} returns {"token": "..."}
+- every other request sends the header Authorization: Bearer <token>
+- GET /api/notes lists my notes
+- POST /api/notes with {"title", "body"} creates a note and returns it with its "id"
+- GET /api/notes/<id> gets one note
+- PUT /api/notes/<id> with {"title", "body"} updates it
+- DELETE /api/notes/<id> deletes it
+- POST /api/notes/<id>/share returns {"share_token": "..."}
+- GET /api/shared/<share_token> returns the shared note (no login needed)
+
+Put everything in this folder. Include a start.sh that installs whatever it needs and starts the server on the port given in the PORT environment variable. Keep the data in this folder so it survives a restart.

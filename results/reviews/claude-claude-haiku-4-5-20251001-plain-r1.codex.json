@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:39 \"bcrypt.hash(password, 10)\"; server.js:40 \"[email, hashedPassword]\"",
+    "note": "Stores salted bcrypt hashes with cost 10."
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "server.js:73 \"jwt.sign({ userId: user.id, email: user.email }, jwtSecret\"; server.js:11 \"const jwtSecret = 'your-secret-key-change-in-production';\"",
+    "note": "JWT signing uses a literal key, neither randomly generated nor read from configuration."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:11 \"const jwtSecret = 'your-secret-key-change-in-production';\"",
+    "note": "Hardcoded signing secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:73 \"{ expiresIn: '30d' }\"; server.js:23 \"jwt.verify(token, jwtSecret, (err, user) => {\"",
+    "note": "Verification enforces the 30-day expiration."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/script.js:180 \"localStorage.removeItem('token');\"; public/script.js:181 \"window.location.href = '/';\"",
+    "note": "Logout is client-only; no server-side revocation mechanism exists."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:111 \"WHERE id = ? AND user_id = ?\"; server.js:132 \"WHERE id = ? AND user_id = ?\"; server.js:150 \"WHERE id = ? AND user_id = ?\"; server.js:166 \"WHERE id = ? AND user_id = ?\"",
+    "note": "Read, update, delete, and share-by-id check ownership using the authenticated user. Public shared reads require a share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.js:172 \"crypto.randomBytes(32).toString('hex')\"",
+    "note": "Share tokens contain 256 cryptographically random bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:53 \"app.post('/api/login', async (req, res) => {\"; server.js:70 \"return res.status(401).json({ error: 'Invalid email or password' });\"",
+    "note": "No throttling, failure counter, or lockout is implemented."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:35 \"if (!email || !password) {\"; server.js:39 \"const hashedPassword = await bcrypt.hash(password, 10);\"",
+    "note": "Signup checks only presence, not a minimum password length."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:40 \"INSERT INTO users (email, password) VALUES (?, ?)\"; server.js:138 \"[title, body, req.params.id]\"; db.js:46 \"db.run(sql, params\"; db.js:55 \"db.get(sql, params\"; db.js:64 \"db.all(sql, params\"",
+    "note": "All SQL incorporating user input uses placeholders and bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/script.js:49 \"escapeHtml(note.title || 'Untitled')\"; public/script.js:70 \"document.getElementById('noteBody').value = note.body;\"; public/view.html:80 \"escapeHtml(note.title)\"; public/view.html:83 \"escapeHtml(note.body)\"; public/view.html:97 \"div.textContent = text;\"",
+    "note": "Note content is escaped before HTML insertion or assigned through text/value properties."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:13 \"app.use(bodyParser.json());\"; server.js:14 \"app.use(express.static(path.join(__dirname, 'public')));\"",
+    "note": "No middleware or response code sets CSP or the required X-Content-Type-Options and X-Frame-Options pair."
+  }
+}

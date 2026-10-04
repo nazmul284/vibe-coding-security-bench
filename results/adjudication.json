@@ -1,0 +1,4 @@
+{
+  "claude-claude-haiku-4-5-20251001-secure-r2/token_csprng": false,
+  "_note": "server.js:11 falls back to the literal 'change-this-secret-in-production' and start.sh never sets JWT_SECRET, so as shipped the signing key is a literal. Graded consistently with the other three Haiku builds."
+}

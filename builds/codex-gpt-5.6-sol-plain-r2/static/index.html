@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Note<span>Share</span></a>
+    <button id="logout" class="quiet hidden">Log out</button>
+  </header>
+  <main>
+    <section id="auth" class="auth-card">
+      <div>
+        <p class="eyebrow">Your words, your space</p>
+        <h1>Notes that stay yours.</h1>
+        <p class="subtle">Write privately. Share only when you choose.</p>
+      </div>
+      <form id="auth-form" class="panel">
+        <h2 id="auth-title">Welcome back</h2>
+        <label>Email<input id="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" minlength="8" required></label>
+        <button id="auth-submit" type="submit">Log in</button>
+        <p id="auth-switch">New here? <button type="button" class="text-button">Create an account</button></p>
+        <p id="auth-error" class="error" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="workspace" class="workspace hidden">
+      <aside>
+        <div class="aside-heading"><h2>Your notes</h2><button id="new-note" title="New note">＋</button></div>
+        <div id="notes-list" class="notes-list"></div>
+        <p id="empty" class="empty hidden">No notes yet.<br>Create your first one.</p>
+      </aside>
+      <section class="editor-wrap">
+        <div id="welcome" class="welcome"><div class="paper-icon">✦</div><h2>Select a note or create a new one</h2></div>
+        <form id="editor" class="editor hidden">
+          <input id="note-title" class="title-input" maxlength="200" placeholder="Untitled note" required>
+          <textarea id="note-body" placeholder="Start writing..."></textarea>
+          <div class="editor-footer">
+            <span id="save-state" class="subtle"></span>
+            <div class="actions">
+              <button id="delete-note" type="button" class="danger">Delete</button>
+              <button id="share-note" type="button" class="secondary">Share</button>
+              <button type="submit">Save note</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <section id="shared" class="shared-card hidden">
+      <p class="eyebrow">A note shared with you</p>
+      <h1 id="shared-title"></h1>
+      <div id="shared-body" class="shared-body"></div>
+      <p id="shared-date" class="subtle"></p>
+      <a href="/" class="home-link">Create your own notes →</a>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:79 \"salt = secrets.token_bytes(16)\"; server.py:81 \"hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1)\"",
+    "note": ""
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:269 \"token = secrets.token_urlsafe(32)\"",
+    "note": ""
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:269 \"token = secrets.token_urlsafe(32)\"; server.py:295 \"share = secrets.token_urlsafe(32)\"",
+    "note": "No literal signing key, secret, or fallback secret appears in the source."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "server.py:169 \"SELECT user_id FROM sessions WHERE token_hash = ?\"; server.py:170 \"return row[\"user_id\"] if row else None\"",
+    "note": "Authentication checks session existence only; no expiration check or session cleanup exists."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/index.html:29 \"function logout(){token=null;sessionStorage.removeItem('noteshare_token');current=null;showLoggedIn()}\"",
+    "note": "Logout is client-only; no server logout endpoint or session deletion exists."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:226 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; server.py:291 \"SELECT id FROM notes WHERE id=? AND user_id=?\"; server.py:319 \"UPDATE notes SET title=?,body=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?\"; server.py:337 \"DELETE FROM notes WHERE id=? AND user_id=?\"",
+    "note": "Read, share creation, update, and delete by note ID all check the authenticated owner."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:295 \"share = secrets.token_urlsafe(32)\"",
+    "note": "Uses 32 cryptographically random bytes (256 bits)."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "server.py:101 \"def limited(key, window=60, max_attempts=12):\"; server.py:237 \"if path in (\"/api/signup\", \"/api/login\") and not limited(ip + \":auth\"):\"; server.py:238 \"self.error(429, \"Too many attempts; try again later\")\"",
+    "note": "Limits authentication attempts per IP, including failed logins, to 12 per 60 seconds."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:250 \"not 12 <= len(password) <= 200\"; server.py:251 \"self.error(400, \"Use a valid email and a password 12\u2013200 characters long\")\"",
+    "note": "Signup requires at least 12 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:265 \"SELECT * FROM users WHERE email=?\"; server.py:284 \"INSERT INTO notes(user_id,title,body) VALUES(?,?,?)\"; server.py:319 \"WHERE id=? AND user_id=?\", (title.strip(), body, int(match.group(1)), user_id)",
+    "note": "All SQL involving user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/index.html:22 \"b.querySelector('strong').textContent=n.title\"; static/index.html:24 \"$('title').value=current.title;$('body').value=current.body\"; static/shared.html:1 \"h.textContent=d.title\" and \"p.textContent=d.body\"",
+    "note": "Note titles and bodies are inserted through textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "server.py:126 \"self.send_header(\"X-Content-Type-Options\", \"nosniff\")\"; server.py:127 \"self.send_header(\"X-Frame-Options\", \"DENY\")\"; server.py:130 \"self.send_header(\"Content-Security-Policy\", ... )\"; server.py:138 \"self.headers_common()\"",
+    "note": ""
+  }
+}

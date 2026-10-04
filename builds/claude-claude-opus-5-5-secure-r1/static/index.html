@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>NoteShare</h1>
+    <div id="userbar" hidden>
+      <span id="user-email"></span>
+      <button id="logout-btn" class="link">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="auth-view" hidden>
+      <div class="card narrow">
+        <h2 id="auth-title">Log in</h2>
+        <form id="auth-form">
+          <label>Email <input type="email" id="auth-email" autocomplete="email" required maxlength="254"></label>
+          <label>Password <input type="password" id="auth-password" autocomplete="current-password" required minlength="8" maxlength="1024"></label>
+          <p id="auth-error" class="error" role="alert"></p>
+          <button type="submit" id="auth-submit">Log in</button>
+        </form>
+        <p class="muted"><span id="auth-switch-text">No account yet?</span>
+          <button id="auth-switch" class="link">Sign up</button></p>
+      </div>
+    </section>
+
+    <section id="notes-view" hidden>
+      <div class="layout">
+        <aside>
+          <button id="new-note-btn">+ New note</button>
+          <ul id="note-list"></ul>
+          <p id="empty-list" class="muted" hidden>No notes yet.</p>
+        </aside>
+        <div class="card" id="editor">
+          <form id="note-form">
+            <input id="note-title" placeholder="Title" maxlength="200" required>
+            <textarea id="note-body" placeholder="Write your note..." maxlength="100000"></textarea>
+            <p id="note-error" class="error" role="alert"></p>
+            <div class="actions">
+              <button type="submit" id="save-btn">Save</button>
+              <button type="button" id="share-btn" class="secondary" hidden>Share</button>
+              <button type="button" id="delete-btn" class="danger" hidden>Delete</button>
+              <span id="save-status" class="muted"></span>
+            </div>
+          </form>
+          <div id="share-box" hidden>
+            <p>Anyone with this link can read this note:</p>
+            <div class="share-row">
+              <input id="share-url" readonly>
+              <button type="button" id="copy-btn" class="secondary">Copy</button>
+              <button type="button" id="unshare-btn" class="danger">Stop sharing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

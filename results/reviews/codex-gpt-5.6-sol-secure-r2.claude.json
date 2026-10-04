@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:61-62 salt = salt or secrets.token_bytes(16); digest = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, ...)",
+    "note": "Uses scrypt with a random 16-byte salt for each user."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:204 token = secrets.token_urlsafe(32)",
+    "note": "Uses Python's cryptographic RNG (32 bytes). Only a SHA-256 hash of the token is stored (app.py:205)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:204 token = secrets.token_urlsafe(32)",
+    "note": "There is no signing key or secret in the source. Tokens are random values checked against the database, and the only env var read is PORT (app.py:261)."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:21 TOKEN_TTL = 30 * 24 * 60 * 60; app.py:142 \"SELECT user_id FROM sessions WHERE token_hash=? AND expires_at>?\"",
+    "note": "Sessions expire after 30 days, and expiry is checked on every request."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:19 function logout(){ token=null; ... sessionStorage.removeItem('token'); showAuth(); }",
+    "note": "Logout only clears the token in the browser. app.py has no logout endpoint, and nothing deletes a session before it expires. The only session DELETE removes expired rows (app.py:143)."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:174 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:246 \"UPDATE notes SET title=?,body=?,updated_at=? WHERE id=? AND user_id=?\"; app.py:255 \"DELETE FROM notes WHERE id=? AND user_id=?\"; app.py:223 \"UPDATE notes SET share_hash=? WHERE id=? AND user_id=?\"",
+    "note": "Read, update, delete and share all filter by the logged-in user's id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:221 token = secrets.token_urlsafe(32)",
+    "note": "256 bits from a cryptographic RNG."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:155-156 hits = [t for t in rate_attempts.get(key, []) if now - t < 60]; if len(hits) >= 12: return True; app.py:199 if self.rate_limited(): return self.json(429, ...)",
+    "note": "Each IP gets 12 attempts per 60 seconds. This counts all login attempts, not just failed ones, and is kept in memory only."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:192 if not isinstance(password, str) or len(password) < 12 or len(password) > 1024:",
+    "note": "The server requires at least 12 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:195 \"INSERT INTO users(email,password_hash,created_at) VALUES(?,?,?)\"; app.py:202 \"SELECT * FROM users WHERE email=?\"",
+    "note": "Every statement that uses user input passes it with ? placeholders. No SQL is built by string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:16 h.textContent=n.title; ... p.textContent=n.body.slice(0,70); static/app.js:29 $('#shared-title').textContent=n.title; $('#shared-body').textContent=n.body;",
+    "note": "Note titles and bodies are only inserted with textContent or input .value. innerHTML is never used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:98-102 self.send_header(\"X-Content-Type-Options\", \"nosniff\"); self.send_header(\"X-Frame-Options\", \"DENY\"); ... self.send_header(\"Content-Security-Policy\", \"default-src 'self'; ...\")",
+    "note": "These headers are set in end_headers, so every response gets them."
+  }
+}

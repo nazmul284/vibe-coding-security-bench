@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "auth.js:8 return bcrypt.hash(password, 10);",
+    "note": "bcryptjs at cost 10; bcrypt adds its own salt."
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "auth.js:4 const SECRET = 'noteshare-secret-key-change-in-production'; auth.js:16 jwt.sign({ userId }, SECRET, { expiresIn: '30d' })",
+    "note": "Tokens are JWTs, but the signing key is a hardcoded string. It is not random and not read from configuration."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "auth.js:4 const SECRET = 'noteshare-secret-key-change-in-production';",
+    "note": "The JWT signing key is a literal in the source."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "auth.js:16 jwt.sign({ userId }, SECRET, { expiresIn: '30d' })",
+    "note": "jwt.verify at auth.js:21 enforces exp, so tokens stop working after 30 days."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/app.js:144-146 function logout() { token = null; localStorage.removeItem('token');",
+    "note": "Logout only clears the token in the browser. server.js has no logout endpoint and no token denylist."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:123 if (note.user_id !== req.userId) (read); server.js:144 (update); server.js:167 (delete); server.js:188 (share)",
+    "note": "All four routes return 403 when the user is not the owner. The update and delete SQL also filter on user_id (db.js:116, db.js:129)."
+  },
+  "share_token_strong": {
+    "value": false,
+    "evidence": "auth.js:28 return Math.random().toString(36).substr(2, 20);",
+    "note": "Math.random is not a cryptographic RNG, and the result carries far fewer than 128 bits of entropy."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:58 app.post('/api/login', async (req, res) => {",
+    "note": "There is no rate-limit middleware, failed-attempt counter or lockout anywhere in server.js."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:38 if (!email || !password) {",
+    "note": "The server only checks that a password is present. The client check is just length < 6 (public/app.js:114) and can be bypassed."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "db.js:90 'SELECT * FROM notes WHERE id = ?', [id]",
+    "note": "Every query in db.js uses ? placeholders with a parameter array. The only template literal (db.js:155) also uses '?'."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "public/app.js:187 ${escapeHtml(note.title)}; public/app.js:25-26 .textContent = note.title / note.body; public/app.js:209-210 .value = note.title / note.body",
+    "note": "The list view escapes titles before using innerHTML. The shared view uses textContent and the editor sets input values. The only other innerHTML is a static string at line 176."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:11-13 app.use(bodyParser.json()); app.use(cors()); app.use(express.static('public'));",
+    "note": "No helmet, no Content-Security-Policy, and no X-Content-Type-Options or X-Frame-Options is set."
+  }
+}

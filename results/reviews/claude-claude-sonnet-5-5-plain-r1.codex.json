@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:9 \"from werkzeug.security import check_password_hash, generate_password_hash\"; app.py:174 \"generate_password_hash(password)\"; requirements.txt:1 \"Flask>=3.0\"",
+    "note": "The compatible Werkzeug default uses salted scrypt."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:198 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:198 \"token = secrets.token_urlsafe(32)\"; app.py:23 \"DUMMY_HASH = generate_password_hash(\"not-a-real-password\")\"",
+    "note": "No literal authentication or signing secret exists. The dummy password is only used for failed-login timing checks and cannot authenticate a user."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:14 \"TOKEN_TTL = 30 * 24 * 3600\"; app.py:203 \"now + TOKEN_TTL\"; app.py:111 \"if not row or row[\"expires_at\"] < time.time():\"",
+    "note": "Tokens expire after 30 days."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:209 \"@app.post(\"/api/logout\")\"; app.py:213 \"DELETE FROM sessions WHERE token_hash = ?\"",
+    "note": "Logout deletes the server-side session."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:137 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:248 \"row = get_own_note(note_id)\"; app.py:263 \"UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id = ?\"; app.py:274 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:285 \"row = get_own_note(note_id)\"",
+    "note": "Read, update, delete and share operations by note ID require ownership. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:290 \"token = secrets.token_urlsafe(24)\"",
+    "note": "Share tokens contain 192 cryptographically random bits."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:143 \"MAX_FAILS, WINDOW = 10, 600\"; app.py:189 \"key = (request.remote_addr, email)\"; app.py:190 \"if throttled(key):\"; app.py:196 \"record_fail(key)\"",
+    "note": "Ten failed attempts within 600 seconds trigger HTTP 429 per IP/email pair; counters are in process memory."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:167 \"if len(password) < 8:\"; app.py:168 \"return err(\"Password must be at least 8 characters\", 400)\"",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:173 \"INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)\"; app.py:192 \"SELECT * FROM users WHERE email = ?\"; app.py:315 \"SELECT * FROM notes WHERE share_token = ?\"",
+    "note": "All SQL involving user input uses bound parameters; schema SQL is static."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/index.html:32 \"for (const c of kids) e.append(c);\"; static/index.html:85 \"el('h3', {}, n.title), el('div', {className: 'body'}, n.body)\"; static/index.html:134 \"el('h2', {}, n.title), el('div', {className: 'body'}, n.body)\"",
+    "note": "Strings are appended as text nodes; editing uses input and textarea values. No raw HTML insertion is used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:347 \"@app.after_request\"; app.py:349 \"resp.headers[\"X-Content-Type-Options\"] = \"nosniff\"\"; app.py:350 \"resp.headers[\"X-Frame-Options\"] = \"DENY\"\"; app.py:352 \"resp.headers[\"Content-Security-Policy\"] = (\"",
+    "note": "The server sets both required headers and a CSP."
+  }
+}

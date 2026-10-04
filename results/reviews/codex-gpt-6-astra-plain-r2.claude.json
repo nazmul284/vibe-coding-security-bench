@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.py:53 hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=16384, r=8, p=1)",
+    "note": "Each user gets a random 16-byte salt: server.py:155 secrets.token_hex(16)"
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "server.py:167 token = secrets.token_urlsafe(32)",
+    "note": "The server stores only a SHA-256 digest of the token (server.py:169)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "server.py:167 secrets.token_urlsafe(32)",
+    "note": "No signing key is used, and no literal secret or fallback appears in the source. The '00' * 16 at server.py:164 is a dummy salt for timing equalization, not a secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.py:113 'SELECT user_id FROM sessions WHERE token_hash=? AND expires>?'",
+    "note": "Expiry is set at server.py:169 to int(time.time()) + SESSION_AGE, with SESSION_AGE = 30 days (server.py:19)."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "server.py:180 db.execute('DELETE FROM sessions WHERE token_hash=?', ...)",
+    "note": "POST /api/logout deletes the session row on the server."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.py:189 'SELECT * FROM notes WHERE id=? AND user_id=?', (match[1], owner)",
+    "note": "Read, update (PUT), delete and share by id all go through this owner-scoped lookup first. A missing row returns 404 (server.py:190-191). The UPDATE at server.py:215 also filters by user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "server.py:195 secrets.token_urlsafe(32)",
+    "note": "32 random bytes = 256 bits."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.py:165-166 if not row or not hmac.compare_digest(...): raise APIError(401, 'Incorrect email or password.')",
+    "note": "Failed logins are not counted, throttled or locked out anywhere."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "server.py:152 if not 8 <= len(password) <= 1024: raise APIError(400, ...)",
+    "note": ""
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.py:158 db.execute('INSERT INTO users(email,salt,password_hash) VALUES(?,?,?)', (email, salt, hashed))",
+    "note": "Every statement that takes user input uses ? placeholders (lines 113, 163, 174, 180, 184, 189, 196, 202, 215, 217, 219). The only executescript (line 30) is a fixed schema with no user input."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:31 title.textContent = note.title; static/app.js:32 body.textContent = note.body",
+    "note": "The shared view also uses textContent (app.js:97), and the editor uses .value (app.js:46). No innerHTML is used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "server.py:88 self.send_header('Content-Security-Policy', \"default-src 'self'; ...\")",
+    "note": "X-Content-Type-Options and X-Frame-Options are also set (server.py:85, 87). respond() sends all three on every response."
+  }
+}

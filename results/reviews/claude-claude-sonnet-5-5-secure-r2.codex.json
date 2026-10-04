@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:13 \"from werkzeug.security import check_password_hash, generate_password_hash\"; app.py:245 \"(email, generate_password_hash(password), now_iso())\"",
+    "note": "Werkzeug's default generates a salted scrypt hash for the dependency versions required by Flask 3."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:279 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:279 \"token = secrets.token_urlsafe(32)\"; app.py:222 \"DUMMY_HASH = generate_password_hash(\"not-a-real-password\")\"",
+    "note": "No literal signing key or authentication secret exists. The dummy password is only used for hash checks when an account does not exist."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:19 \"TOKEN_LIFETIME = 30 * 24 * 3600\"; app.py:281 \"int(time.time()) + TOKEN_LIFETIME\"; app.py:159 \"WHERE token_hash = ? AND expires_at > ?\"",
+    "note": "Tokens expire after 30 days; authentication checks expiry."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:287 \"@app.post(\"/api/logout\")\"; app.py:291 \"db.execute(\"DELETE FROM tokens WHERE token_hash = ?\", (g.token_hash,))\"",
+    "note": "Logout deletes the server-side token record."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:178 \"SELECT * FROM notes WHERE id = ? AND user_id = ?\"; app.py:330 \"row = get_own_note(note_id)\"; app.py:337 \"row = get_own_note(note_id)\"; app.py:361 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; app.py:370 \"row = get_own_note(note_id)\"; app.py:387 \"UPDATE notes SET share_token = NULL WHERE id = ? AND user_id = ?\"",
+    "note": "Reading, updating, deleting, sharing and unsharing by note id enforce ownership. Public reads require a share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:375 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Share tokens contain 256 bits of cryptographic randomness."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:265 \"if limiter.blocked((\"login-ip\", ip), 30, WINDOW)\"; app.py:266 \"or limiter.blocked((\"login-email\", email, ip), 8, WINDOW)\"; app.py:275 \"limiter.record((\"login-ip\", ip), WINDOW)\"; app.py:276 \"limiter.record((\"login-email\", email, ip), WINDOW)\"",
+    "note": "Failed logins trigger in-memory throttling over a 15-minute window, per IP and per email/IP pair."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:21 \"MIN_PASSWORD, MAX_PASSWORD = 10, 128\"; app.py:237 \"if not isinstance(password, str) or not (MIN_PASSWORD <= len(password) <= MAX_PASSWORD):\"; app.py:238 \"return err(f\"Password must be {MIN_PASSWORD}-{MAX_PASSWORD} characters.\", 400)\"",
+    "note": "Signup rejects passwords shorter than 10 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:244 \"INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)\"; app.py:270 \"SELECT id, password_hash FROM users WHERE email = ?\"; app.py:350 \"UPDATE notes SET title = ?, body = ?, updated_at = ? \"; app.py:401 \"SELECT * FROM notes WHERE share_token = ?\"",
+    "note": "All SQL statements incorporating user input bind parameters; schema and PRAGMA statements are static."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:60 \"b.textContent = n.title\"; static/app.js:70 \"$(\"title\").value = note ? note.title : \"\"\"; static/app.js:71 \"$(\"body\").value = note ? note.body : \"\"\"; static/shared.js:6 \"document.getElementById(\"title\").textContent = n.title\"; static/shared.js:7 \"document.getElementById(\"body\").textContent = n.body\"",
+    "note": "Note content is rendered through textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:183 \"@app.after_request\"; app.py:185 \"resp.headers[\"Content-Security-Policy\"] = (\"; app.py:190 \"resp.headers[\"X-Content-Type-Options\"] = \"nosniff\"\"; app.py:191 \"resp.headers[\"X-Frame-Options\"] = \"DENY\"\"",
+    "note": "The response hook sets CSP and both required defensive headers."
+  }
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>NoteShare</h1>
+    <div id="userbar" hidden>
+      <span id="who"></span>
+      <button id="logout" class="secondary">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="message" class="message" hidden></p>
+
+    <section id="auth" hidden>
+      <div class="card narrow">
+        <h2 id="auth-title">Log in</h2>
+        <form id="auth-form">
+          <label>Email <input type="email" id="email" required autocomplete="email"></label>
+          <label>Password <input type="password" id="password" required minlength="8" autocomplete="current-password"></label>
+          <button type="submit" id="auth-submit">Log in</button>
+        </form>
+        <p class="switch"><a href="#" id="auth-switch">Need an account? Sign up</a></p>
+      </div>
+    </section>
+
+    <section id="app" hidden>
+      <div class="layout">
+        <aside class="card">
+          <button id="new-note">+ New note</button>
+          <ul id="note-list"></ul>
+          <p id="empty" class="muted" hidden>No notes yet.</p>
+        </aside>
+        <div class="card" id="editor">
+          <form id="note-form">
+            <input type="text" id="note-title" placeholder="Title" maxlength="200" required>
+            <textarea id="note-body" placeholder="Write your note here..." rows="16"></textarea>
+            <div class="actions">
+              <button type="submit" id="save">Save</button>
+              <button type="button" id="share" class="secondary" hidden>Share</button>
+              <button type="button" id="delete" class="danger" hidden>Delete</button>
+            </div>
+          </form>
+          <div id="share-box" hidden>
+            <p>Anyone with this link can read this note:</p>
+            <div class="share-row">
+              <input type="text" id="share-link" readonly>
+              <button type="button" id="copy" class="secondary">Copy</button>
+              <button type="button" id="unshare" class="danger">Stop sharing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

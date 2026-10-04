@@ -1,0 +1,9 @@
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+.DS_Store

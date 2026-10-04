@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:158 \"hashed = generate_password_hash(password, method='scrypt')\"; app.py:161 \"INSERT INTO users(email,password) VALUES (?,?)', (email, hashed)",
+    "note": "Werkzeug generates a salted scrypt hash."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:169 \"token = secrets.token_urlsafe(32)\"",
+    "note": ""
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:17 \"generate_password_hash(secrets.token_urlsafe(32), method='scrypt')\"; app.py:169 \"token = secrets.token_urlsafe(32)\"",
+    "note": "No hardcoded application secret or signing key found. Tests contain literal test passwords."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:172 \"int(time.time())+86400\"; app.py:121 \"SELECT user_id FROM sessions WHERE token_hash=? AND expires>?\"",
+    "note": "Sessions expire after 24 hours; authentication checks expiration."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:175 \"@app.post('/api/logout')\"; app.py:179 \"DELETE FROM sessions WHERE token_hash=?\"",
+    "note": ""
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:137 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:208 \"row = owned(note_id)\"; app.py:227 \"if owned(note_id) is None:\"",
+    "note": "GET, PUT, DELETE and sharing by note ID require ownership. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:229 \"token = secrets.token_urlsafe(32) if request.method == 'POST' else None\"",
+    "note": "32 cryptographically random bytes provide 256 bits."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:142 \"rate_limit('auth-ip:' + (request.remote_addr or 'unknown'), 30, 900)\"; app.py:153 \"rate_limit('account:' + digest(email), 15, 900)\"; app.py:154 \"return fail('Too many attempts. Try again in 15 minutes.', 429)\"",
+    "note": "Login attempts, including failures, are limited per IP and account."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:156 \"if len(password) < 12:\"; app.py:157 \"return fail('Use a password with at least 12 characters.', 400)\"",
+    "note": "Signup requires at least 12 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:165 \"SELECT * FROM users WHERE email=?', (email,)\"; app.py:221 \"UPDATE notes SET title=?, body=?, updated_at=? WHERE id=? AND user_id=?\"; app.py:236 \"SELECT * FROM notes WHERE share_hash=?', (digest(token),)\"",
+    "note": "All SQL containing user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:27 \"title.textContent = note.title\"; static/app.js:28 \"preview.textContent = note.body.slice(0, 70)\"; static/app.js:35 \"$('note-body').value = note?.body || ''\"; static/app.js:102 \"$('shared-title').textContent = note.title; $('shared-body').textContent = note.body\"",
+    "note": "Note content is rendered through textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:83 \"@app.after_request\"; app.py:86 \"'Content-Security-Policy':\"; app.py:87 \"'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY'\"",
+    "note": ""
+  }
+}

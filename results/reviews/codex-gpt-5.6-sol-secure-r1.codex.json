@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:246 'generate_password_hash(password, method=\"scrypt\")'",
+    "note": "Werkzeug generates a random salt for the scrypt password hash."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:268 'token = secrets.token_urlsafe(32)'",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:268 'token = secrets.token_urlsafe(32)'; app.py:348 'token = secrets.token_urlsafe(32)'",
+    "note": "No literal signing key, secret, or secret fallback appears in the source."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:21 'TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30'; app.py:273 'current + TOKEN_TTL_SECONDS'; app.py:142 'WHERE token_hash = ? AND expires_at > ?'",
+    "note": "Authentication enforces a 30-day expiration."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:45 'state.token = null'; static/app.js:48 'sessionStorage.removeItem(\"noteshare_token\")'; app.py:270 'DELETE FROM sessions WHERE expires_at <= ?'",
+    "note": "Logout is client-only. The server deletes only already-expired sessions and provides no early revocation endpoint."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:306 'WHERE id = ? AND user_id = ?'; app.py:313 'row = owned_note(note_id)'; app.py:324 'UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id = ?'; app.py:336 'DELETE FROM notes WHERE id = ? AND user_id = ?'; app.py:346 'if owned_note(note_id) is None:'",
+    "note": "Reading, updating, deleting, and sharing by note ID require ownership. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:348 'token = secrets.token_urlsafe(32)'",
+    "note": "Share tokens contain 256 bits of cryptographic randomness."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:98 'def allowed(self, key, limit=12, window=300):'; app.py:259 'if not limiter.allowed(key):'; app.py:260 'return error(\"Too many attempts. Try again later\", 429)'",
+    "note": "An in-memory limiter permits 12 attempts per 300 seconds per IP/email key."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:163 'if len(password) < 10 or len(password) > 1024:'; app.py:240 'email, password, problem = clean_credentials(json_object())'; app.py:242 'return error(problem, 400)'",
+    "note": "Signup rejects passwords shorter than 10 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:245 'INSERT INTO users(email, password_hash, created_at) VALUES (?, ?, ?)'; app.py:264 'SELECT id, password_hash FROM users WHERE email = ?'; app.py:325 '(title, body, now_iso(), note_id, g.user_id)'; app.py:361 'SELECT * FROM notes WHERE share_token_hash = ?'",
+    "note": "All SQL involving user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:69 'title.textContent = note.title'; static/app.js:71 'preview.textContent = note.body || \"Empty note\"'; static/app.js:84 '$(\"note-title\").value = note.title'; static/app.js:85 '$(\"note-body\").value = note.body'; static/app.js:189 '$(\"shared-title\").textContent = note.title'; static/app.js:190 '$(\"shared-body\").textContent = note.body'",
+    "note": "Note content uses textContent or form values. The innerHTML assignment contains only a fixed error message."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:196 '@app.after_request'; app.py:198 'response.headers[\"X-Content-Type-Options\"] = \"nosniff\"'; app.py:199 'response.headers[\"X-Frame-Options\"] = \"DENY\"'; app.py:202 'response.headers[\"Content-Security-Policy\"] = ('",
+    "note": "The response hook sets both required headers and a CSP."
+  }
+}

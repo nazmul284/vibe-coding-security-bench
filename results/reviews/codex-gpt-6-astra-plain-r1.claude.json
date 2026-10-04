@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:60 hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=16384, r=8, p=1); app.py:166 salt = secrets.token_hex(16)",
+    "note": "scrypt with a random 16-byte salt for each user."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:178 token = secrets.token_urlsafe(32)",
+    "note": "Opaque random token. Only its SHA-256 hash is stored (app.py:180)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:178 secrets.token_urlsafe(32); app.py:175 row['salt'] if row else '00' * 16",
+    "note": "There is no signing key at all. The literal '00'*16 is a dummy salt used for unknown emails so login timing looks the same. It is not a secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:18 SESSION_LIFETIME = 30 * 24 * 3600; app.py:139 'SELECT user_id FROM sessions WHERE token_hash = ? AND expires > ?'",
+    "note": "Sessions expire after 30 days, and the server checks this on every request."
+  },
+  "logout_revokes": {
+    "value": true,
+    "evidence": "app.py:190-191 if path == '/api/logout' ... db.execute('DELETE FROM sessions WHERE token_hash = ?', ...)",
+    "note": "Logout deletes the session row on the server."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:210 'SELECT * FROM notes WHERE id = ? AND user_id = ?', (note_id, owner); app.py:216, 220, 228, 233 '... WHERE id = ? AND user_id = ?'",
+    "note": "One owner-scoped lookup gates read, update, delete and share/unshare, and each write also filters on user_id."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:215 token = secrets.token_urlsafe(32)",
+    "note": "32 random bytes from a CSPRNG is 256 bits."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:131-132 if count >= 20: raise ApiError(429, 'Too many attempts. Please wait a minute.'); app.py:163 self.throttle()",
+    "note": "Each IP gets 20 login/signup attempts per 60-second window, after which it is blocked. Every attempt counts, not only failed ones."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:119 if not isinstance(password, str) or not 8 <= len(password) <= 256: raise ApiError(400, ...)",
+    "note": "The server enforces this check, and signup goes through credentials() at app.py:164."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:169 'INSERT INTO users(email,password_hash,salt) VALUES(?,?,?)'; app.py:174 'SELECT * FROM users WHERE email = ?'; app.py:228 'UPDATE notes SET title = ?, body = ?, ...'",
+    "note": "Every statement that takes user input uses ? placeholders. No SQL is built with string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:71 title.textContent = note.title; static/app.js:72 preview.textContent = note.body; static/app.js:137 $('shared-title').textContent = note.title; $('shared-body').textContent = note.body",
+    "note": "The editor uses input/textarea .value. innerHTML is never used."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:89 'X-Content-Type-Options', 'nosniff'; app.py:91 'X-Frame-Options', 'DENY'; app.py:92 'Content-Security-Policy', \"default-src 'self'; ...\"",
+    "note": "These are set in respond(), which every response goes through."
+  }
+}

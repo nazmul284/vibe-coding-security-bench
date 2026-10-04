@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:59 hashlib.pbkdf2_hmac(\"sha256\", password.encode(), salt, 200_000)",
+    "note": "Uses PBKDF2-SHA256 with 200,000 iterations and a random 16-byte salt from secrets.token_bytes(16) (app.py:58)."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:195 token = secrets.token_urlsafe(32)",
+    "note": "Session tokens are 256-bit values from the secrets module. Only a SHA-256 hash of each token is stored (app.py:196)."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:195 secrets.token_urlsafe(32)",
+    "note": "There is no signing key or secret in the code. Tokens are random values looked up in the database, not signed."
+  },
+  "token_expiry": {
+    "value": false,
+    "evidence": "app.py:113 SELECT user_id FROM sessions WHERE token_hash = ?",
+    "note": "The sessions table has a created_at column, but the token lookup never checks it. Tokens stay valid forever."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "index.html:25 $('#logout').onclick=()=>{localStorage.removeItem('noteshare_token');token=null;showAuth()}",
+    "note": "Logout only clears the token in the browser. The server has no logout endpoint and never deletes from sessions."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:165 WHERE id=? AND user_id=?; app.py:236 UPDATE ... WHERE id=? AND user_id=?; app.py:251 DELETE FROM notes WHERE id=? AND user_id=?; app.py:213 SELECT 1 FROM notes WHERE id=? AND user_id=?",
+    "note": "Read, update, delete and share are all limited to the note's owner."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:215 share = secrets.token_urlsafe(24)",
+    "note": "24 random bytes from the secrets module is 192 bits, above the 128-bit minimum."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "app.py:193 if not user or not password_ok(password, user[\"password_hash\"]): return self.error(\"Invalid email or password\", 401)",
+    "note": "Failed logins are not counted, slowed down or locked out."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:181 if not isinstance(password, str) or len(password) < 8:",
+    "note": "The server rejects passwords shorter than 8 characters at signup."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:136 WHERE s.share_token=?\", (share,); app.py:185 VALUES(?,?)",
+    "note": "Every query that includes user input uses ? placeholders. No query is built with string formatting."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "index.html:22 <h3>${esc(n.title)}</h3><div class=\"note-body\">${esc(n.body)||...}",
+    "note": "The page escapes titles and bodies with esc() (index.html:25), which covers & < > ' \". The server-rendered shared page also escapes them with html.escape (app.py:139-140)."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "app.py:90-93 send_header(\"Content-Type\"...), send_header(\"Access-Control-Allow-Origin\", \"*\")",
+    "note": "No response sets Content-Security-Policy, X-Content-Type-Options or X-Frame-Options."
+  }
+}

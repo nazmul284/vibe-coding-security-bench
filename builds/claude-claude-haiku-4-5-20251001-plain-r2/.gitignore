@@ -1,0 +1,5 @@
+node_modules/
+notes.db
+*.log
+_server_wrapper.js
+.DS_Store

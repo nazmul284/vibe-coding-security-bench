@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoteShare</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Auth Pages */
+    .auth-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-card h1 {
+      margin-bottom: 30px;
+      text-align: center;
+      color: #667eea;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+    }
+
+    .auth-toggle a {
+      color: #667eea;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .auth-toggle a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      background: #fee;
+      border: 1px solid #fcc;
+      color: #c00;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .success-message {
+      background: #efe;
+      border: 1px solid #cfc;
+      color: #060;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    /* App Layout */
+    .app-header {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+
+    .app-header h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .app-header-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-secondary {
+      background: #6c757d !important;
+      padding: 10px 20px !important;
+      width: auto !important;
+      font-size: 14px !important;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268 !important;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+
+    .notes-list {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notes-list-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notes-list-header h2 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .btn-new {
+      background: #667eea !important;
+      padding: 12px !important;
+      width: 100% !important;
+      font-size: 14px !important;
+    }
+
+    .notes-list-items {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 600px;
+    }
+
+    .note-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .note-item:hover {
+      background: #f5f5f5;
+    }
+
+    .note-item.active {
+      background: #e8eef9;
+      border-left: 4px solid #667eea;
+      padding-left: 16px;
+    }
+
+    .note-item h3 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .note-item p {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .note-editor {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .note-editor.empty {
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: #999;
+    }
+
+    .editor-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .editor-header h2 {
+      color: #333;
+      font-size: 16px;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-small {
+      padding: 8px 16px !important;
+      width: auto !important;
+      font-size: 13px !important;
+      background: #6c757d !important;
+    }
+
+    .btn-small:hover {
+      background: #5a6268 !important;
+    }
+
+    .btn-danger {
+      background: #dc3545 !important;
+    }
+
+    .btn-danger:hover {
+      background: #c82333 !important;
+    }
+
+    .btn-success {
+      background: #28a745 !important;
+    }
+
+    .btn-success:hover {
+      background: #218838 !important;
+    }
+
+    .editor-body {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-body input {
+      font-size: 24px;
+      font-weight: bold;
+      border: none;
+      border-bottom: 2px solid #eee;
+      padding: 10px 0;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .editor-body input:focus {
+      outline: none;
+      border-bottom-color: #667eea;
+    }
+
+    .editor-body textarea {
+      flex: 1;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 15px;
+      font-size: 14px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      resize: none;
+    }
+
+    .editor-body textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .editor-footer {
+      padding: 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .modal-content p {
+      color: #666;
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+    }
+
+    .btn-close {
+      background: #6c757d !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .notes-list {
+        max-height: 300px;
+      }
+
+      .auth-card {
+        padding: 30px 20px;
+      }
+    }
+
+    /* Shared note page */
+    .shared-note-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .shared-note-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .shared-note-card h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .shared-note-card .note-body {
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 20px;
+      margin-top: 20px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .shared-note-meta {
+      color: #999;
+      font-size: 12px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login/Signup Screen -->
+<div id="authScreen" class="auth-container">
+  <div class="auth-card">
+    <h1 id="authTitle">Sign Up</h1>
+    <div id="authMessage"></div>
+    <form id="authForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" id="authButton">Sign Up</button>
+    </form>
+    <div class="auth-toggle">
+      Already have an account? <a id="toggleAuth">Log In</a>
+    </div>
+  </div>
+</div>
+
+<!-- App Screen -->
+<div id="appScreen" style="display: none;">
+  <div class="container">
+    <div class="app-header">
+      <h1>📝 NoteShare</h1>
+      <p id="userEmail" style="color: #666; margin-bottom: 15px;"></p>
+      <div class="app-header-actions">
+        <button class="btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="app-layout">
+      <div class="notes-list">
+        <div class="notes-list-header">
+          <h2>My Notes</h2>
+          <button class="btn-new" onclick="createNewNote()">+ New Note</button>
+        </div>
+        <div class="notes-list-items" id="notesList"></div>
+      </div>
+
+      <div id="noteEditor" class="note-editor empty">
+        <p>Select a note to edit or create a new one</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shared Note Screen -->
+<div id="sharedScreen" style="display: none;">
+  <div class="shared-note-container">
+    <div class="shared-note-card">
+      <h1 id="sharedTitle"></h1>
+      <div id="sharedMessage"></div>
+      <div id="sharedBody" class="note-body"></div>
+      <div class="shared-note-meta" id="sharedMeta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div id="shareModal" class="modal">
+  <div class="modal-content">
+    <h2>Share This Note</h2>
+    <p>Anyone with this link can view this note:</p>
+    <p id="shareLink" style="background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px;"></p>
+    <div class="modal-actions">
+      <button class="btn-success" onclick="copyShareLink()">Copy Link</button>
+      <button class="btn-close" onclick="closeShareModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentToken = null;
+  let currentUserId = null;
+  let currentNoteId = null;
+  let isEditMode = false;
+  let isSignUpMode = true;
+
+  // Initialize app on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+
+    // Check if we're on a shared note page
+    const shareToken = new URLSearchParams(window.location.search).get('share');
+    if (shareToken) {
+      loadSharedNote(shareToken);
+      return;
+    }
+
+    if (token && userId) {
+      currentToken = token;
+      currentUserId = userId;
+      showAppScreen();
+    } else {
+      showAuthScreen();
+    }
+
+    // Setup auth form
+    document.getElementById('authForm').addEventListener('submit', handleAuth);
+    document.getElementById('toggleAuth').addEventListener('click', toggleAuthMode);
+  });
+
+  function showAuthScreen() {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appScreen').style.display = 'none';
+    document.getElementById('sharedScreen').style.display = 'none';
+  }
+
+  function showAppScreen() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('sharedScreen').style.display = 'none';
+
+    const email = localStorage.getItem('email');
+    document.getElementById('userEmail').textContent = `Logged in as: ${email}`;
+
+    loadNotes();
+  }
+
+  function toggleAuthMode() {
+    isSignUpMode = !isSignUpMode;
+    const title = document.getElementById('authTitle');
+    const button = document.getElementById('authButton');
+    const toggle = document.querySelector('.auth-toggle a');
+
+    if (isSignUpMode) {
+      title.textContent = 'Sign Up';
+      button.textContent = 'Sign Up';
+      toggle.textContent = 'Log In';
+      document.querySelector('.auth-toggle').innerHTML = 'Already have an account? <a id="toggleAuth">Log In</a>';
+    } else {
+      title.textContent = 'Log In';
+      button.textContent = 'Log In';
+      toggle.textContent = 'Sign Up';
+      document.querySelector('.auth-toggle').innerHTML = 'Don\'t have an account? <a id="toggleAuth">Sign Up</a>';
+    }
+
+    document.getElementById('authMessage').innerHTML = '';
+    document.getElementById('toggleAuth').addEventListener('click', toggleAuthMode);
+  }
+
+  async function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const button = document.getElementById('authButton');
+    const messageDiv = document.getElementById('authMessage');
+
+    button.disabled = true;
+
+    try {
+      const endpoint = isSignUpMode ? '/api/signup' : '/api/login';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        messageDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+        button.disabled = false;
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('email', email);
+
+      currentToken = data.token;
+      currentUserId = data.userId;
+
+      showAppScreen();
+    } catch (error) {
+      messageDiv.innerHTML = `<div class="error-message">Network error. Please try again.</div>`;
+      button.disabled = false;
+    }
+  }
+
+  async function loadNotes() {
+    try {
+      const response = await fetch('/api/notes', {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to load notes');
+
+      const notes = await response.json();
+      const list = document.getElementById('notesList');
+
+      if (notes.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No notes yet</div>';
+        document.getElementById('noteEditor').className = 'note-editor empty';
+        document.getElementById('noteEditor').innerHTML = '<p>Create your first note!</p>';
+        return;
+      }
+
+      list.innerHTML = notes.map(note => `
+        <div class="note-item" onclick="loadNote('${note.id}')">
+          <h3>${escapeHtml(note.title)}</h3>
+          <p>${new Date(note.updated_at).toLocaleDateString()}</p>
+        </div>
+      `).join('');
+
+      // Load the first note by default
+      if (notes.length > 0) {
+        loadNote(notes[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    }
+  }
+
+  async function loadNote(noteId) {
+    try {
+      const response = await fetch(`/api/notes/${noteId}`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to load note');
+
+      const note = await response.json();
+      currentNoteId = noteId;
+      isEditMode = false;
+
+      const editor = document.getElementById('noteEditor');
+      editor.className = 'note-editor';
+      editor.innerHTML = `
+        <div class="editor-header">
+          <h2>${escapeHtml(note.title)}</h2>
+          <div class="editor-actions">
+            <button class="btn-small btn-success" onclick="toggleEditMode()">Edit</button>
+            <button class="btn-small" onclick="shareNote()">Share</button>
+            <button class="btn-small btn-danger" onclick="deleteNote()">Delete</button>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${escapeHtml(note.body)}</div>
+        </div>
+      `;
+
+      // Update active item in list
+      document.querySelectorAll('.note-item').forEach(item => item.classList.remove('active'));
+      event.target.closest('.note-item').classList.add('active');
+    } catch (error) {
+      console.error('Error loading note:', error);
+    }
+  }
+
+  function toggleEditMode() {
+    if (isEditMode) {
+      saveNote();
+    } else {
+      const editor = document.getElementById('noteEditor');
+      const content = editor.querySelector('.editor-body').textContent;
+      const title = editor.querySelector('.editor-header h2').textContent;
+
+      editor.innerHTML = `
+        <div class="editor-header">
+          <h2 style="display: none;"></h2>
+        </div>
+        <div class="editor-body">
+          <input type="text" id="noteTitle" value="${escapeHtml(title)}" placeholder="Note title">
+          <textarea id="noteBody" placeholder="Start typing...">${escapeHtml(content)}</textarea>
+        </div>
+        <div class="editor-footer">
+          <button class="btn-small" onclick="toggleEditMode()">Cancel</button>
+          <button class="btn-small btn-success" onclick="saveNote()">Save</button>
+        </div>
+      `;
+      isEditMode = true;
+    }
+  }
+
+  async function saveNote() {
+    const title = document.getElementById('noteTitle').value;
+    const body = document.getElementById('noteBody').value;
+
+    if (!title.trim()) {
+      alert('Title is required');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/notes/${currentNoteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        },
+        body: JSON.stringify({ title, body })
+      });
+
+      if (!response.ok) throw new Error('Failed to save note');
+
+      isEditMode = false;
+      loadNotes();
+    } catch (error) {
+      alert('Error saving note: ' + error.message);
+    }
+  }
+
+  async function createNewNote() {
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        },
+        body: JSON.stringify({ title: 'Untitled', body: '' })
+      });
+
+      if (!response.ok) throw new Error('Failed to create note');
+
+      const note = await response.json();
+      currentNoteId = note.id;
+      loadNotes();
+
+      // Automatically enter edit mode for new note
+      setTimeout(() => toggleEditMode(), 100);
+    } catch (error) {
+      alert('Error creating note: ' + error.message);
+    }
+  }
+
+  async function deleteNote() {
+    if (!confirm('Delete this note? This cannot be undone.')) return;
+
+    try {
+      const response = await fetch(`/api/notes/${currentNoteId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to delete note');
+
+      currentNoteId = null;
+      loadNotes();
+    } catch (error) {
+      alert('Error deleting note: ' + error.message);
+    }
+  }
+
+  async function shareNote() {
+    try {
+      const response = await fetch(`/api/notes/${currentNoteId}/share`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to generate share link');
+
+      const data = await response.json();
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareUrl = `${baseUrl}?share=${data.share_token}`;
+
+      document.getElementById('shareLink').textContent = shareUrl;
+      document.getElementById('shareModal').classList.add('active');
+    } catch (error) {
+      alert('Error sharing note: ' + error.message);
+    }
+  }
+
+  function copyShareLink() {
+    const link = document.getElementById('shareLink').textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      alert('Share link copied to clipboard!');
+      closeShareModal();
+    });
+  }
+
+  function closeShareModal() {
+    document.getElementById('shareModal').classList.remove('active');
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+    currentToken = null;
+    currentUserId = null;
+    showAuthScreen();
+    document.getElementById('authForm').reset();
+    document.getElementById('authMessage').innerHTML = '';
+    isSignUpMode = true;
+    toggleAuthMode();
+  }
+
+  async function loadSharedNote(shareToken) {
+    try {
+      const response = await fetch(`/api/shared/${shareToken}`);
+
+      if (!response.ok) {
+        document.getElementById('sharedScreen').style.display = 'flex';
+        document.getElementById('sharedMessage').innerHTML = '<div class="error-message">Note not found or sharing has been disabled</div>';
+        return;
+      }
+
+      const note = await response.json();
+      document.getElementById('sharedTitle').textContent = escapeHtml(note.title);
+      document.getElementById('sharedBody').textContent = note.body;
+      document.getElementById('sharedMeta').textContent = `Shared note • Updated ${new Date(note.updated_at).toLocaleDateString()}`;
+      document.getElementById('sharedScreen').style.display = 'flex';
+    } catch (error) {
+      document.getElementById('sharedScreen').style.display = 'flex';
+      document.getElementById('sharedMessage').innerHTML = '<div class="error-message">Error loading shared note</div>';
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

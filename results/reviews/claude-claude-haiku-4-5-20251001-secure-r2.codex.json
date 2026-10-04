@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "server.js:103 \"bcrypt.hashSync(password, 10)\"; server.js:108 \"[userId, email.toLowerCase(), hashedPassword]\"",
+    "note": "Stores salted bcrypt hashes with cost 10."
+  },
+  "token_csprng": {
+    "value": false,
+    "evidence": "server.js:142 \"jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' })\"; server.js:11 \"process.env.JWT_SECRET || 'change-this-secret-in-production'\"",
+    "note": "Signing uses configuration when supplied, but otherwise uses a nonrandom literal key."
+  },
+  "no_hardcoded_secret": {
+    "value": false,
+    "evidence": "server.js:11 \"const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';\"",
+    "note": "Literal fallback signing secret."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "server.js:117 \"expiresIn: '30d'\"; server.js:142 \"expiresIn: '30d'\"; server.js:79 \"jwt.verify(token, JWT_SECRET)\"",
+    "note": "Signup and login tokens expire after 30 days; verification enforces expiration."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "public/index.html:836 \"localStorage.removeItem('token');\"; server.js:79 \"jwt.verify(token, JWT_SECRET)\"",
+    "note": "Logout only clears client state; no server-side revocation or session deletion exists."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "server.js:193 \"FROM notes WHERE id = ? AND user_id = ?\"; server.js:219 \"UPDATE notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id = ?\"; server.js:242 \"DELETE FROM notes WHERE id = ? AND user_id = ?\"; server.js:263 \"SELECT id FROM notes WHERE id = ? AND user_id = ?\"",
+    "note": "All four note-by-id operations check the authenticated owner. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": false,
+    "evidence": "server.js:288 \"const shareToken = uuidv4();\"",
+    "note": "UUID v4 provides 122 random bits, below the required 128."
+  },
+  "login_rate_limit": {
+    "value": false,
+    "evidence": "server.js:123 \"app.post('/api/login', (req, res) => {\"; server.js:139 \"return res.status(401).json({ error: 'Invalid email or password' });\"",
+    "note": "No throttling, failed-attempt tracking, or lockout is implemented."
+  },
+  "password_policy": {
+    "value": false,
+    "evidence": "server.js:95 \"if (password.length < 6) {\"",
+    "note": "Signup accepts passwords of six or seven characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "server.js:107 \"INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)\"; server.js:220 \"[title, body || '', now, req.params.id, req.userId]\"; server.js:311 \"WHERE share_links.share_token = ?\"; server.js:312 \"[req.params.shareToken]\"",
+    "note": "All SQL involving user input uses placeholders and bound parameters."
+  },
+  "xss_safe_render": {
+    "value": false,
+    "evidence": "public/index.html:716 \"editor.innerHTML = `\"; public/index.html:721 \"value=\"${escapeHtml(title)}\"\"; public/index.html:872 \"div.textContent = text;\"; public/index.html:873 \"return div.innerHTML;\"",
+    "note": "The escaping helper does not escape double quotes for HTML attributes. A note title can escape the input value attribute and inject event-handler attributes."
+  },
+  "security_headers": {
+    "value": false,
+    "evidence": "server.js:13 \"app.use(express.json());\"; server.js:14 \"app.use(express.static(path.join(__dirname, 'public')));\"",
+    "note": "No middleware or response code sets CSP or the required X-Content-Type-Options and X-Frame-Options pair."
+  }
+}

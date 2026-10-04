@@ -1,0 +1,32 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #f4f5f7; color: #1d2330; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #fff; border-bottom: 1px solid #e3e5ea; }
+header h1 { font-size: 1.3rem; margin: 0; }
+header h1 a { color: inherit; text-decoration: none; }
+main { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+.card { background: #fff; border: 1px solid #e3e5ea; border-radius: 10px; padding: 20px; }
+.narrow { max-width: 380px; margin: 40px auto; }
+label { display: block; margin-bottom: 12px; font-size: .9rem; }
+input, textarea { width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #c9cdd6; border-radius: 6px; margin-top: 4px; }
+textarea { min-height: 320px; resize: vertical; }
+#note-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; }
+button { font: inherit; padding: 8px 14px; border: none; border-radius: 6px; background: #3b5bdb; color: #fff; cursor: pointer; }
+button:hover { filter: brightness(1.1); }
+button.secondary { background: #e7ebf7; color: #24315e; }
+button.danger { background: #fdecec; color: #b42318; }
+button.link { background: none; color: #3b5bdb; padding: 0; }
+.error { color: #b42318; min-height: 1em; font-size: .9rem; }
+.muted { color: #6b7280; font-size: .9rem; }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+aside ul { list-style: none; padding: 0; margin: 12px 0; }
+aside li { padding: 10px 12px; border-radius: 6px; cursor: pointer; background: #fff; border: 1px solid #e3e5ea; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+aside li.active { border-color: #3b5bdb; background: #eef2ff; }
+aside button { width: 100%; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#share-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e3e5ea; }
+.share-row { display: flex; gap: 8px; align-items: center; }
+.share-row input { margin: 0; }
+.note-body { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
+#userbar { display: flex; gap: 12px; align-items: center; }
+[hidden] { display: none !important; }

@@ -1,0 +1,12 @@
+{
+  "name": "claude-claude-sonnet-5-5-plain-r2",
+  "agent": "claude",
+  "model": "claude-sonnet-5-5",
+  "prompt": "plain",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 87.9,
+  "cost_usd": 0.2073236,
+  "turns": 7,
+  "is_error": false
+}

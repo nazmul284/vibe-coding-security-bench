@@ -1,0 +1,12 @@
+{
+  "name": "claude-claude-opus-5-5-secure-r1",
+  "agent": "claude",
+  "model": "claude-opus-5-5",
+  "prompt": "secure",
+  "rep": 1,
+  "rc": 0,
+  "wall_s": 243.5,
+  "cost_usd": 0.8510591999999999,
+  "turns": 17,
+  "is_error": false
+}

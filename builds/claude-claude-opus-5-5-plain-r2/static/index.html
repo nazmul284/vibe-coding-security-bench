@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoteShare</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1><a href="/">NoteShare</a></h1>
+    <div id="userbar" hidden>
+      <span id="user-email"></span>
+      <button id="logout-btn" class="link">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="message" role="alert" hidden></p>
+
+    <!-- Log in / sign up -->
+    <section id="auth-view" hidden>
+      <div class="card narrow">
+        <h2 id="auth-title">Log in</h2>
+        <form id="auth-form">
+          <label>Email <input type="email" id="auth-email" required autocomplete="email"></label>
+          <label>Password <input type="password" id="auth-password" required minlength="8" autocomplete="current-password"></label>
+          <button type="submit" id="auth-submit">Log in</button>
+        </form>
+        <p class="muted"><span id="auth-switch-text">No account yet?</span>
+          <button id="auth-switch" class="link">Sign up</button></p>
+      </div>
+    </section>
+
+    <!-- Notes -->
+    <section id="notes-view" hidden>
+      <div class="layout">
+        <aside>
+          <button id="new-note-btn">+ New note</button>
+          <ul id="note-list"></ul>
+          <p id="no-notes" class="muted" hidden>You have no notes yet.</p>
+        </aside>
+        <div class="card" id="editor" hidden>
+          <form id="note-form">
+            <input id="note-title" placeholder="Title" maxlength="200" required>
+            <textarea id="note-body" placeholder="Write your note here..." rows="14"></textarea>
+            <div class="actions">
+              <button type="submit">Save</button>
+              <button type="button" id="share-btn" class="secondary">Share</button>
+              <button type="button" id="delete-btn" class="danger">Delete</button>
+            </div>
+          </form>
+          <div id="share-box" hidden>
+            <p>Anyone with this link can read this note:</p>
+            <div class="share-row">
+              <input id="share-link" readonly>
+              <button type="button" id="copy-btn" class="secondary">Copy</button>
+            </div>
+            <button type="button" id="unshare-btn" class="link">Stop sharing</button>
+          </div>
+        </div>
+        <div class="card muted" id="editor-empty">Pick a note on the left or create a new one.</div>
+      </div>
+    </section>
+
+    <!-- Shared note (for friends without an account) -->
+    <section id="shared-view" hidden>
+      <div class="card">
+        <h2 id="shared-title"></h2>
+        <div id="shared-body" class="note-body"></div>
+        <p class="muted">Shared with you via NoteShare.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,25 @@
+Security checks met, out of 12 (one number per build)
+
+agent       model             plain   + secure   works  Semgrep
+----------- -------------  --------  ---------  ------  -------
+Claude Code Opus 5.5         12, 12     12, 12     4/4        4
+Claude Code Sonnet 5.5       12, 12     12, 12     4/4        4
+Claude Code Haiku 4.5          6, 5       6, 4     4/4        6
+Codex       GPT-6-Astra      12, 11     12, 12     4/4        4
+Codex       GPT-5.6-Sol        9, 8     11, 11     4/4        0
+Codex       GPT-5.6-Luna       8, 7     10, 10     4/4        2
+
+Builds missing each check (of 12 per prompt)
+
+check                     plain  + secure
+-----------------------   -----  --------
+login rate limit              7         2
+server-side logout            6         6
+security headers              5         2
+token expiry                  4         2
+8-char password min           3         2
+random/secret token           2         2
+no hardcoded secret           2         2
+strong share token            1         1
+safe HTML rendering           0         1
+all other checks              0         0

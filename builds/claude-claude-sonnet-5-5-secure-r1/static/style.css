@@ -1,0 +1,7 @@
+body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;color:#222}
+input,textarea,button{font:inherit;padding:.5rem;margin:.25rem 0;box-sizing:border-box}
+input,textarea{width:100%}textarea{min-height:10rem}
+button{cursor:pointer}
+.note{border:1px solid #ccc;border-radius:6px;padding:.75rem;margin:.75rem 0}
+.note h3{margin:0 0 .5rem}.body{white-space:pre-wrap;overflow-wrap:anywhere}
+.err{color:#b00020}.hidden{display:none}.row{display:flex;gap:.5rem;flex-wrap:wrap}

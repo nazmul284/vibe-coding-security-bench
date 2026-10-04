@@ -1,0 +1,62 @@
+{
+  "pw_slow_hash": {
+    "value": true,
+    "evidence": "app.py:61 \"salt = salt or secrets.token_bytes(16)\"; app.py:62 \"hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32, maxmem=64 * 1024 * 1024)\"",
+    "note": "Signup stores the salted scrypt result."
+  },
+  "token_csprng": {
+    "value": true,
+    "evidence": "app.py:204 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Login tokens use 32 cryptographically random bytes."
+  },
+  "no_hardcoded_secret": {
+    "value": true,
+    "evidence": "app.py:204 \"token = secrets.token_urlsafe(32)\"; app.py:221 \"token = secrets.token_urlsafe(32)\"",
+    "note": "No literal signing key, secret, or secret fallback appears in the source."
+  },
+  "token_expiry": {
+    "value": true,
+    "evidence": "app.py:21 \"TOKEN_TTL = 30 * 24 * 60 * 60\"; app.py:205 \"now + TOKEN_TTL\"; app.py:142 \"WHERE token_hash=? AND expires_at>?\"",
+    "note": "Login tokens expire after 30 days; authentication enforces expiry."
+  },
+  "logout_revokes": {
+    "value": false,
+    "evidence": "static/app.js:19 \"function logout(){ token=null; notes=[]; current=null; sessionStorage.removeItem('token'); showAuth(); }\"; app.py:143 \"DELETE FROM sessions WHERE expires_at<=?\"",
+    "note": "Logout is client-only. Server session deletion only removes expired tokens."
+  },
+  "owner_checks": {
+    "value": true,
+    "evidence": "app.py:174 \"SELECT * FROM notes WHERE id=? AND user_id=?\"; app.py:246 \"UPDATE notes SET title=?,body=?,updated_at=? WHERE id=? AND user_id=?\"; app.py:255 \"DELETE FROM notes WHERE id=? AND user_id=?\"; app.py:223 \"UPDATE notes SET share_hash=? WHERE id=? AND user_id=?\"",
+    "note": "All four operations by note ID require the authenticated owner. Public shared reads use a separate share token."
+  },
+  "share_token_strong": {
+    "value": true,
+    "evidence": "app.py:221 \"token = secrets.token_urlsafe(32)\"",
+    "note": "Share tokens contain 256 bits of cryptographic randomness."
+  },
+  "login_rate_limit": {
+    "value": true,
+    "evidence": "app.py:155 \"if now - t < 60\"; app.py:156 \"if len(hits) >= 12: return True\"; app.py:199 \"if self.rate_limited(): return self.json(429\"",
+    "note": "Login attempts, including failures, are limited to 12 per IP per 60 seconds."
+  },
+  "password_policy": {
+    "value": true,
+    "evidence": "app.py:192 \"if not isinstance(password, str) or len(password) < 12 or len(password) > 1024:\"; app.py:193 \"return self.json(400\"",
+    "note": "Signup rejects passwords shorter than 12 characters."
+  },
+  "sql_parameterized": {
+    "value": true,
+    "evidence": "app.py:202 \"con.execute(\\\"SELECT * FROM users WHERE email=?\\\", (email.strip().lower(),))\"; app.py:246 \"WHERE id=? AND user_id=?\\\", (*valid,int(time.time()),match.group(1),uid))\"",
+    "note": "Every SQL statement incorporating user input uses bound parameters."
+  },
+  "xss_safe_render": {
+    "value": true,
+    "evidence": "static/app.js:16 \"h.textContent=n.title\" and \"p.textContent=n.body.slice(0,70)\"; static/app.js:17 \"$('#title').value=n.title; $('#body').value=n.body\"; static/app.js:29 \"$('#shared-title').textContent=n.title; $('#shared-body').textContent=n.body\"",
+    "note": "Note content is inserted through textContent or form values, never raw HTML."
+  },
+  "security_headers": {
+    "value": true,
+    "evidence": "app.py:98 \"self.send_header(\\\"X-Content-Type-Options\\\", \\\"nosniff\\\")\"; app.py:99 \"self.send_header(\\\"X-Frame-Options\\\", \\\"DENY\\\")\"; app.py:102 \"self.send_header(\\\"Content-Security-Policy\\\", ... )\"",
+    "note": "The end_headers override sets both required headers and a CSP."
+  }
+}

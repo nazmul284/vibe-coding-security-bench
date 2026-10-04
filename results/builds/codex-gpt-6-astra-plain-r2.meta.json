@@ -1,0 +1,16 @@
+{
+  "name": "codex-gpt-6-astra-plain-r2",
+  "agent": "codex",
+  "model": "gpt-6-astra",
+  "prompt": "plain",
+  "rep": 2,
+  "rc": 0,
+  "wall_s": 516.1,
+  "usage": {
+    "input_tokens": 151505,
+    "cached_input_tokens": 131968,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 12306,
+    "reasoning_output_tokens": 96
+  }
+}
