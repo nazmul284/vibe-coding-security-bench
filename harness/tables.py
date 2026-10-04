@@ -34,3 +34,15 @@ for k, v in sorted(s["property_failures"].items(), key=lambda kv: -kv[1]["plain"
     if v["plain"] or v["secure"]:
         print(f"{NAMES.get(k, k):24}{v['plain']:>7}{v['secure']:>10}")
 print(f"{'all other checks':24}{0:>7}{0:>10}")
+
+print("\nWhat each model produced (mean of 4 builds)\n")
+print(f"{'agent':12}{'model':14}{'lines':>7}{'minutes':>9}{'cost':>8}{'deps':>7}")
+print(f"{'-'*11:12}{'-'*13:14}{'-'*5:>7}{'-'*7:>9}{'-'*6:>8}{'-'*5:>7}")
+for m in ORDER:
+    rs = [r for r in s["rows"] if r["model"] == m]
+    agent = "Claude Code" if m.startswith("claude") else "Codex"
+    lines = round(sum(r["loc"] for r in rs) / len(rs))
+    mins = sum(r["wall_s"] for r in rs) / len(rs) / 60
+    cost = f"${sum(r['cost_usd'] for r in rs) / len(rs):.2f}" if rs[0]["cost_usd"] is not None else "plan"
+    deps = sum(1 for r in rs if r["dep_tool"])  # builds that declared third-party packages
+    print(f"{agent:12}{LABEL[m]:14}{lines:>7}{mins:>9.1f}{cost:>8}{f'{deps}/4':>7}")
